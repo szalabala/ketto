@@ -1,13 +1,13 @@
-# ketto
+ # ketto
 # masodik pr=b'lkoy's csoport
 # nincs2 - nincs2négynélkül páros jéték
 
 # Levels
 #   Bugsy kezdő - azonos kép párok, kevés (4 pár)
 #   Zsugabubus - azonos képek, sok (9 pár)
-#   Nimfas - normál - ki-a-párja (bud1-bud2, ter1-ter)
-#   Johnny - expert - ki-a-párja (bud-terence - 9 pár)
-#   Charlie Firpo - fan - ki-a-párja extra (16 pár)
+#   ..    - normál - ki-a-párja (bud1-bud2, ter1-ter2)
+#   Nimfas - advanced - ki-a-párja (bud-terence - 9 pár)
+#   Charlie Firpo - expert - ki-a-párja extra (16 pár)
 #   Paragulis - reshuffle-one, on succ or unsucc attempt
 #
 # Ending

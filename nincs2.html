@@ -38,6 +38,7 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
 img.top { z-index: 3; }
 img.med { z-index: 2; }
 img.back { z-index: 1; }
+.modebutton { border: 5px solid red;  border-radius:25%; padding:1%; margin:1%; text-align: center; }
 @keyframes blink1{
   0%{ transform: scale(1,1); }
   10%{ transform: scale(1.05,1.05); }
@@ -59,8 +60,8 @@ img.back { z-index: 1; }
     var _shortMs = 500;
     var _longMs = 1500;
     var gameDesc = { maxPair: 12, numLongEdge: 6, numShortEdge: 3
-        , H: 3
         , W: 6
+        , H: 3
         , dice: 4
         , start_message: "<span style=\"color:blue;text-decoration:blink;\">" + "lovas" + "</span>"
         , restart_message: "<span style=\"color:blue;text-decoration:blink;\">Kattints a Puffinra az újrakezdéshez</span>"
@@ -72,6 +73,13 @@ img.back { z-index: 1; }
             { name: "Alan", step: 0, kincs: false, imgsrc: "fig2c.png", img2src: "fig2d.png", img2step: 19 },
             { name: "Frisco", step: 0, kincs: false, imgsrc: "fig4c.png", img2src: "fig4.png", img2step: 44 },
             { name: "Kalóz", step: 0, kincs: false, imgsrc: "fig5c.png", img2src: "fig5.png", img2step: 32 } ]
+        , mode: [
+            { id:1, match:'same', n1: 2, pairs: [3, 17, 7, 9, 13, 15] },
+            { id:2, match:'same', n1: 3, pairs: [2, 4, 5, 18, 7, 9, 10, 11, 12, 13, 15, 17] },
+            { id:3, match:'ab', n1: 3, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ] },
+            { id:4, match:'ab', n1: 4, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] },
+            { id:5, match:'ab', n1: 4, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] }
+        ]
         , messages: { intro: "Keresd a párját! Kettesével megnézheted a kártyákat.", 
                       step1: "Kattints egy kártyára!", 
                       step2: "Válasz egy másik kártyát!", 
@@ -85,7 +93,7 @@ img.back { z-index: 1; }
 
     };
     var gameData = {
-        steps: [], turn: 0, aktiv: 0, players: [], started: false, pics: [],
+        steps: [], turn: 0, aktiv: 0, players: [], started: false, pics: [], gameModeIdx:0, 
         state: "wait4first",  // "wait4first", "zoomOut1st", "wait4second", "zoomOut2nd", ""
         targetList: [],  // { id, img_src, posid }
         totalPairs: 0,
@@ -123,6 +131,10 @@ img.back { z-index: 1; }
 
         setTimeout(myResize, 10);  // initial placement
 
+        for (var i=1;i <= 5; i++ ) {
+            document.getElementById(`b${i}`).style.display = 'initial';
+        }
+
         /*
         for (var i=1;i < 2; i++ ) { // whatever
             //document.getElementById('p'+i).style.filter = 'invert(0%)';
@@ -133,36 +145,53 @@ img.back { z-index: 1; }
         */
 
         myLoad();
+        //restartGame();
+    }
+
+    function selectMode(n=1) {
+        console.log(`selectMode: ${n}`);
+        gameData.gameModeIdx = n - 1;
+        for (var i=1;i <= 5; i++ ) {
+            document.getElementById(`b${i}`).style.display = 'none';
+        }
         restartGame();
+    }
+
+    function showMode() {
+
     }
 
     function restartGame() {
         gameData.targetList = [];  // creating a random list of number, the pictures to show
-        var N = gameDesc.W * gameDesc.H;   //number of pairs to match
-        var N2 = Math.floor(N / 2 );   //number of pairs to match
+        var mode = gameDesc.mode[gameData.gameModeIdx];
+        gameDesc.numLongEdge = mode.n1 * 2;
+        gameDesc.numShortEdge = mode.n1;
+        var N = mode.n1 * mode.n1; //gameDesc.W * gameDesc.H;   //number of pairs to match
+        var N2 = mode.pairs.length; //Math.floor(N / 2 );   //number of pairs to match
         var list = [];  // creating a random list of number, the pictures to show
         var poslist = [];
         gameData.totalPairs = 0;
 
-        for (var i = 1; i <= gameDesc.maxPair; i++) { // random list of pairs
+        for (var i = 1; i <= N2; i++) { // random list of pairs
             list.push(i);
         }
         shuffle(list);
 
-        for (var i = 0; i < N; i++) { // random list of positions
+        for (var i = 0; i < 2*N; i++) { // random list of positions
             poslist.push(i);
         }
         shuffle(poslist);
         
         console.log(`start ${list} x ${poslist}`);
-        for (var i = 0; i < N2; i++) {  // add tiles
-            gameData.targetList.push( { id: `p${1+2*i}`, pairId: i, src: `images/${list[i]}a.jpg`, posid: poslist[i*2] } ); 
-            gameData.targetList.push( { id: `p${2+2*i}`, pairId: i, src: `images/${list[i]}b.jpg`, posid: poslist[i*2+1] } ); 
+        for (var i = 0; i < N; i++) {  // add tiles
+            var img2sel = (mode.match == 'same') ? 'a' : 'b';
+            gameData.targetList.push( { id: `p${1+2*i}`, pairId: i, src: `images/${list[i]}a.jpg`, posid: poslist[i*2] } );
+            gameData.targetList.push( { id: `p${2+2*i}`, pairId: i, src: `images/${list[i]}${img2sel}.jpg`, posid: poslist[i*2+1] } );
         }
         gameData.foundPairs = 0;
-        gameData.totalPairs = N2;
+        gameData.totalPairs = N;
         
-        for (var i = 0; i < N; i++) {
+        for (var i = 0; i < 2*N; i++) {
             addImage(gameData.targetList[i].id, gameUI.cardBackImg);// gameData.targetList[i].src);
         }
         setTimeout(myResize, 10);  // initial placement
@@ -328,6 +357,7 @@ img.back { z-index: 1; }
         img.style.borderRadius = "25%";
         img.style.maxWidth = "30vw";
         img.style.maxHeight = "30vh";
+        img.style.border = '2px solid white';
         img.onclick = function() { onClickPic(id); };
         document.getElementById('toptable').appendChild(img);
     }
@@ -396,7 +426,7 @@ img.back { z-index: 1; }
         }
     }
     function setStyle(elem,styleitem,value) {
-        //document.getElementById(elem).style.setProperty(styleitem,value)
+        document.getElementById(elem).style.setProperty(styleitem,value);
     }
     function getPPosX(step,player=0) {
         return gameDesc.steps[step].x;
@@ -502,7 +532,14 @@ display:inline-block;
         <div style="position:relative;float:right;width:90%;text-align:right;vertical-align:top;">
             <p id='volume' style="text-align:right"><img src="images/volume2a.png" style="max-height:4vmin" onclick="toggleAudio()"> <img id='fullscr' src="images/fullscr2a.png" style="max-height:5vmin" onclick="toggleFullScr()"></p>
         </div>
-        <p id="bigtext" class="xl" style="position:fixed;float:left;left:10%;top:50%;width:80%;padding:0;text-align:center;font-stretch:semi-condensed;">Keresd meg a párját!</p>
+        <div id="selectMode" style="position:fixed;float:left;left:10%;top:60%;width:80%;padding:0;text-align:center;">
+            <p id="bigtext" class="xl" style="text-align:center;font-stretch:semi-condensed;">Keresd meg a párját!</p>
+            <button id="b1" class="xl modebutton" onClick="selectMode(1)">1</button>
+            <button id="b2" class="xl modebutton" onClick="selectMode(2)">2</button>
+            <button id="b3" class="xl modebutton" onClick="selectMode(3)">3</button>
+            <button id="b4" class="xl modebutton" onClick="selectMode(4)">4</button>
+            <button id="b5" class="xl modebutton" onClick="selectMode(5)">5</button>
+        </div>
         <p id="status" class="medium" style="position:fixed;float:left;left:0%;bottom:0%;width:50%;padding:0;text-align:left;font-stretch:semi-condensed;">status</p>
         <p id="credit" class="medium" style="position:fixed;float:right;right:0%;bottom:0%;width:90%;padding:0;text-align:right;font-stretch:semi-condensed;"><i>&copy; Copyright 2021 szalabala - grafika: TBD</i></p>
     </div>
