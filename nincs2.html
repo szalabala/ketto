@@ -96,6 +96,8 @@ img.back { z-index: 1; }
         totalPairs: 0,
         foundPairs: [],
         attempts: 0,
+        startTime: 0,   // use new Date().getTime()
+        endTime:0,
         selectA: 0,
         selectB: 0,
         isPairFound: false,
@@ -105,7 +107,7 @@ img.back { z-index: 1; }
     var cookies = {      // arrays indexed per difficulty level
         started: [],     // games started
         finished: [],
-        bestMoves: [],   // array of best moves per difficulty level
+        bestMove: [],   // array of best moves per difficulty level
         bestTime: []
     };
     var gameUI = {
@@ -134,7 +136,7 @@ img.back { z-index: 1; }
         document.getElementById('aboutDiv').style.display = 'inline';
         document.getElementById('tabla').style.filter = 'invert(25%)';
         var text = document.getElementById('texta');
-        text.innerHTML = 'Nincs kettő négy nélkül!<br>'
+        text.innerHTML = '<h1>Nincs kettő négy nélkül!</h1>'
                        + 'Egyszerű pűrkereső memóriajáték BSTH filmek rajongói számára.<br><br>'
                        + 'Játék terv, programmozás, blablala: szalabala<br>';
                        + 'Zene: xxx<br>';
@@ -146,10 +148,11 @@ img.back { z-index: 1; }
             pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(0.5, 0.5)`; // size:enlarge .. rotate:flip
         }
 
+        text.innerHTML += "<br>"
         for (var i = 0; i < gameDesc.modes.length; i++) {
             text.innerHTML += `${gameDesc.modes[i].name} mód: ${cookies.finished[i]} játék`
             if (cookies.finished[i] && cookies.finished[i] > 0) {
-                text.innerHTML += `leg: ${cookies.bestMoves[i]} legjobb idő:${cookies.bestTime[i]}s`
+                text.innerHTML += `, legkevesebb lépés: ${cookies.bestMove[i]}, legjobb idő:${cookies.bestTime[i]}s`
             }
             text.innerHTML += ".<br>"
         }
@@ -220,11 +223,13 @@ img.back { z-index: 1; }
         var mode = gameDesc.modes[gameData.gameModeIdx];
         gameDesc.numLongEdge = mode.n1 * 2;
         gameDesc.numShortEdge = mode.n1;
-        var N = mode.n1 * mode.n1; //gameDesc.W * gameDesc.H;   //number of pairs to match
-        var N2 = mode.pairs.length; //Math.floor(N / 2 );   //number of pairs to match
+        var N = mode.n1 * mode.n1;      // gameDesc.W * gameDesc.H;   //number of pairs to match
+        var N2 = mode.pairs.length;     // Math.floor(N / 2 );   //number of pairs to match
         var list = mode.pairs.slice();  // creating a random list of number, the pictures to show
         var poslist = [];
         gameData.totalPairs = 0;
+        gameData.attempts = 0;
+        gameData.startTime = new Date().getTime();
 
         shuffle(list);
 
@@ -247,9 +252,7 @@ img.back { z-index: 1; }
         }
         setTimeout(myResize, 10);  // initial placement
 
-        while (cookies.started.length <= gameData.gameModeIdx) {
-            cookies.started.push(0);
-        }
+        myExtendArray(cookies.started, gameData.gameModeIdx, 0);
         cookies.started[gameData.gameModeIdx] += 1;
         storeCookies();
     }
@@ -257,22 +260,18 @@ img.back { z-index: 1; }
     function onClickPic(id) {
         console.log(`click ${id}`);
         if (gameData.state == 'wait4first') {
-            //if (gameData.foundPairs.find(element => element.id == id)) {}
-
             gameData.attempts += 1;
             gameData.selectA = id;
             gameData.state = "wait4second";
             gameData.isPairFound = false;
-            var pos = getPosPxOfPospc( {x_pc:gameUI.zoomedPosPc, y_pc:50} );
-            zoomOutPic(id, pos);
+            setStatusMsg(`${gameData.attempts}. lépés`);
+            zoomOutPic(id, getPosPxOfPospc( {x_pc:gameUI.zoomedPosPc, y_pc:50} ));
         } else if (gameData.state == 'wait4second' && id != gameData.selectA) {
             gameData.selectB = id;
             gameData.state = "evaluate";
-            var pos = getPosPxOfPospc( {x_pc:(100-gameUI.zoomedPosPc), y_pc:50} );
-            zoomOutPic(id, pos);
+            zoomOutPic(id, getPosPxOfPospc( {x_pc:(100-gameUI.zoomedPosPc), y_pc:50} ));
             setTimeout(evaluateSelection(), _longMs * 2);
-        } else {
-
+        //} else {
         }
     }
     function evaluateSelection() {
@@ -288,10 +287,10 @@ img.back { z-index: 1; }
             document.getElementById(gameData.selectB).onclick = "";
         }
 
-        setMsg(`${cookies.started[gameData.gameModeIdx].started}. játék: eddig ${gameData.foundPairs} párt találtál meg a ${gameData.totalPairs}-ból.`);
         if (gameData.foundPairs.length < gameData.totalPairs) {
             setTimeout(changeState, _longMs, "wait4first");
         } else {
+            gameData.endTime = new Date().getTime();
             setTimeout(playClosing, _longMs);
         }
     }
@@ -326,8 +325,24 @@ img.back { z-index: 1; }
         setMsg(gameDesc.ending[r],"bigtext");
 
         cookies.finished[gameData.gameModeIdx] += 1;
+        myUpdateStat(cookies.bestMove, gameData.gameModeIdx, gameData.attempts);
+        myUpdateStat(cookies.bestTime, gameData.gameModeIdx, Math.floor((gameData.endTime - gameData.startTime)/1000));
         storeCookies();
     }
+    function myExtendArray(arr, len, val) {
+        while (arr.length <= len) {
+            arr.push(val);
+        }
+    }
+    function myUpdateStat(arr, idx, val) {
+        myExtendArray(arr, idx, 0);
+        if (arr[idx] == 0) {
+            arr[idx] = val;
+        } else {
+            arr[idx] = Math.min(val, arr[idx]);
+        }
+    }
+
 
     function zoomOutPic(id, pos) {
         var pic = document.getElementById(id);
@@ -481,10 +496,10 @@ img.back { z-index: 1; }
             var pos = getPosPxOfPospc(getPosPcOf(gameData.targetList[i].posid));
             var img = document.getElementById(gameData.targetList[i].id);
             img.style.transition=''; // instant
-            img.style.width = gameUI.cache.imgSizePx + 'px';
-            img.style.height = gameUI.cache.imgSizePx + 'px';
-//            img.style.maxWidth = gameUI.cache.imgSizePx + 'px';
-//            img.style.maxHeight = gameUI.cache.imgSizePx + 'px';
+//            img.style.width = gameUI.cache.imgSizePx + 'px';
+//            img.style.height = gameUI.cache.imgSizePx + 'px';
+            img.style.maxWidth = gameUI.cache.imgSizePx + 'px';
+            img.style.maxHeight = gameUI.cache.imgSizePx + 'px';
             // instead of img.style.left img.style.top 
             img.style.transform=`translate(${pos.x}px, ${pos.y}px)`; // size:enlarge .. rotate:flip
             console.log(`  res ${i} ${gameData.targetList[i].id} ${img.style.left} ${img.style.top}` );
@@ -658,11 +673,14 @@ display:inline-block;
         <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
             <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;"></p>
         </div>
-        <p id="status" class="medium" style="position:fixed;float:left;left:0%;bottom:0%;width:50%;padding:0;text-align:left;font-stretch:semi-condensed;">
-        <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a></p>
-        <p id="credit" class="medium" style="position:fixed;float:right;right:0%;bottom:0%;width:90%;padding:0;text-align:right;font-stretch:semi-condensed;"><i>&copy; Copyright 2021 szalabala - grafika: TBD</i></p>
+        <cite id="status" class="medium" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
+        <div id='footer' style="position:absolute;float:left;left:0%;bottom:0%;width:100%;padding:0;margin:0;text-align:left;font-stretch:semi-condensed;">
+            <a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+            <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;"><i>&copy; Copyright 2021 szalabala - grafika: TBD</i></cite>
+        </div>
     </div>
     <!--https://www.buymeacoffee.com/szalabala
+         style="float:left;border:1px solid black"
         <p id="status" class="medium" style="position:fixed;float:left;left:0%;bottom:0%;width:50%;padding:0;text-align:left;font-stretch:semi-condensed;"><a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img style="max-height:5vh" src="images/buymeacoffee.png"></a></p>
         <img id="tabla" class="back" src="data:," style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;max-height:99vh;max-width:99vw;z-index:-1;object-fit:contain;object-position:center center;">
         <div style="position:absolute;float:left;max-height:15%;max-width:75%;text-align:center;top:50%;left:10%;transform-origin:bottom left;transform:rotate(-90deg);">
