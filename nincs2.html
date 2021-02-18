@@ -52,14 +52,11 @@ img.back { z-index: 1; }
 </style>
 <script>
     var _name = "Nincs Kettő Négy Nélkül";
-    var _version = '0.9.7';
+    var _version = '0.3.1';
     var _fps = 10;
     var _shortMs = 500;
     var _longMs = 1500;
-    var gameDesc = { maxPair: 12, numLongEdge: 6, numShortEdge: 3
-        , W: 6
-        , H: 3
-        , dice: 4
+    var gameDesc = { W: 6, H: 3
         , start_message: "<span style=\"color:blue;text-decoration:blink;\">" + "lovas" + "</span>"
         , restart_message: "<span style=\"color:blue;text-decoration:blink;\">Kattints a Puffinra az újrakezdéshez</span>"
         , tabla: "kincsaminincs-terkep1000d.jpg", tabla0: "images/nincs2header_46d.jpg", tabla_end: "ending.jpg"
@@ -71,11 +68,11 @@ img.back { z-index: 1; }
             { name: "Frisco", step: 0, kincs: false, imgsrc: "fig4c.png", img2src: "fig4.png", img2step: 44 },
             { name: "Kalóz", step: 0, kincs: false, imgsrc: "fig5c.png", img2src: "fig5.png", img2step: 32 } ]
         , modes: [
-            { id:1, match:'same', n1: 2, pairs: [3, 17, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
-            { id:2, match:'same', n1: 3, pairs: [2, 4, 5, 18, 7, 9, 10, 11, 12, 13, 15, 17], name:"Zsugabubus", desc:"Nem vagyok valami nagy játékos." },
-            { id:3, match:'ab', n1: 3, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ], name:"Nimfas", desc: "Itt senki sem olyan nagy szám." },
-            { id:4, match:'ab', n1: 4, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Charlie" },
-            { id:5, match:'ab', n1: 4, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Paragulis", desc:"Golyózott volna a szemed a trükkjeitől." }
+            { id:1, match:'same', n1: 2, good: 8, pairs: [3, 17, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
+            { id:2, match:'same', n1: 3, good: 18, pairs: [2, 4, 5, 18, 7, 9, 10, 11, 12, 13, 15, 17], name:"Zsugabubus", desc:"Nem vagyok valami nagy játékos." },
+            { id:3, match:'ab', n1: 3, good: 18, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ], name:"Nimfas", desc: "Itt senki sem olyan nagy szám." },
+            { id:4, match:'ab', n1: 4, good: 50, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Charlie" },
+            { id:5, match:'ab', n1: 4, good: 40, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Paragulis", desc:"Golyózott volna a szemed a trükkjeitől." }
         ]
         , messages: { intro: "Keresd a párját! Kettesével megnézheted a kártyákat.", 
                       step1: "Kattints egy kártyára!", 
@@ -83,15 +80,19 @@ img.back { z-index: 1; }
                       evalPass: "Ügyes vagy!",
                       evalFail: "Próbáld újra!",
                       win: "Gratulálok!" }
-        , ending: [ "Fantasztikus! Egyszerűen hihetetlen.", "Ilyet a fecskék is csak akkor csinálnak, ha jó formában vannak.",
-                    "Az ajtók azért vannak, hogy bemenjünk rajtuk, nem tudtad?", "Hogy is mondjam, csak ez... olyan... mint... nem találok rá jelzőt.",
-                    "Önök uraim egy rendkívül alapos nyomozói munka eredményei.", "Tudod mit? Furfangos egy furkó vagy te!",
-                    "Te mondtad Főnök, olyan a szemem, mint a sasé!", "A te tudatalattid különleges tipikussággal jelentkezik."]
+        , eval_good: [ "Fantasztikus! Egyszerűen hihetetlen.", "Ilyet a fecskék is csak akkor csinálnak, ha jó formában vannak.",
+                "Az ajtók azért vannak, hogy bemenjünk rajtuk, nem tudtad?", "Hogy is mondjam, csak ez... olyan... mint... nem találok rá jelzőt.",
+                "Önök uraim egy rendkívül alapos nyomozói munka eredményei.", "Tudod mit? Furfangos egy furkó vagy te!",
+                "Te mondtad Főnök, olyan a szemem, mint a sasé!", "Egyet is nehéz találni, na de kettőt. És ilyen rövid idő alatt?" ]
+        , eval_bad: [ "A te tudatalattid különleges tipikussággal jelentkezik.", "Elnézést a késésért, nem találták a cella kukcsát.", 
+                "Attól tartok ezt a számot nem ismerem.", "Kábító! Valóban az.", "A kábítót ágy értettem elképesztő.",
+                "Önök a mi szervezetünk remekművei.", "Úgy marad majd meg, mint ey zárójelbe tett bolonds-g, amit soha senki nem fog tudni megmagyarázni.",
+                "Plátói? Mi a fenét jelent az, hogy plátói?" ]
 
     };
     var gameData = {
         steps: [], turn: 0, aktiv: 0, players: [], started: false, pics: [], gameModeIdx:0, 
-        state: "wait4first",  // "wait4first", "zoomOut1st", "wait4second", "zoomOut2nd", ""
+        state: "menu",  // "menu", "wait4first", "zoomOut1st", "wait4second", "zoomOut2nd", "end", "about", 
         targetList: [],  // { id, img_src, posid }
         totalPairs: 0,
         foundPairs: [],
@@ -113,7 +114,7 @@ img.back { z-index: 1; }
     var gameUI = {
         mainAreaWidthPc: 80, mainAreaHeightPc: 90, // figureSizePc: 10,
         cardBackImg: "images/back.jpg",
-        zoomedPosPc: 30, spingTimeMs:_shortMs, spinDeg:360,
+        zoomedPosPc: 30, spinTimeMs:_shortMs, spinDeg:360,
         fullscr: 0, muted: false,
         cache: { imgSizePx: 100, offsetXPx:1, offsetYPx:1 }
     };
@@ -132,6 +133,7 @@ img.back { z-index: 1; }
 
     function showAbout() {
         console.log(`About`)
+        gameData.state = 'about'
         document.getElementById('selectModeDiv').style.display = 'none';
         document.getElementById('aboutDiv').style.display = 'inline';
         document.getElementById('tabla').style.filter = 'invert(25%)';
@@ -144,7 +146,7 @@ img.back { z-index: 1; }
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getEndingPosPcOf(gameData.targetList[i].posid));
-            pic.style.transition=`transform ${gameUI.spingTimeMs}ms ease-in-out`; // linear ease 
+            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
             pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(0.5, 0.5)`; // size:enlarge .. rotate:flip
         }
 
@@ -171,6 +173,7 @@ img.back { z-index: 1; }
 
 
     function start() {
+        gameData.state = 'menu'
         document.getElementById('tabla').src = gameDesc.tabla0;
 
         setTimeout(myResize, 10);  // initial placement
@@ -221,8 +224,6 @@ img.back { z-index: 1; }
     function restartGame() {
         gameData.targetList = [];  // creating a random list of number, the pictures to show
         var mode = gameDesc.modes[gameData.gameModeIdx];
-        gameDesc.numLongEdge = mode.n1 * 2;
-        gameDesc.numShortEdge = mode.n1;
         var N = mode.n1 * mode.n1;      // gameDesc.W * gameDesc.H;   //number of pairs to match
         var N2 = mode.pairs.length;     // Math.floor(N / 2 );   //number of pairs to match
         var list = mode.pairs.slice();  // creating a random list of number, the pictures to show
@@ -255,6 +256,8 @@ img.back { z-index: 1; }
         myExtendArray(cookies.started, gameData.gameModeIdx, 0);
         cookies.started[gameData.gameModeIdx] += 1;
         storeCookies();
+
+        gameData.state = 'wait4first'
     }
 
     function onClickPic(id) {
@@ -304,6 +307,10 @@ img.back { z-index: 1; }
                 zoomInPic(gameData.selectB);
             }
             gameData.isPairFound = false;
+
+            if (gameData.gameModeIdx == 4 && gameData.attempts % 5 == 0) {
+                swapTwoCards();
+            }
         } else if (newState == "wait4first") {
             var pic = document.getElementById(selectAid);
             pic.classList.remove("med");
@@ -312,17 +319,35 @@ img.back { z-index: 1; }
         gameData.state = newState;
     }
 
+    function swapTwoCards() {
+        var r1 = Math.floor(Math.random() * gameData.targetList.length);
+        var r2 = Math.floor(Math.random() * gameData.targetList.length);
+        console.log(`swap ${r1} -- ${r2}`);
+        var tmp = gameData.targetList[r1].posid;
+        gameData.targetList[r1].posid = gameData.targetList[r2].posid;
+        gameData.targetList[r2].posid = tmp;
+        
+        moveHomePic(gameData.targetList[r1].id);
+        moveHomePic(gameData.targetList[r2].id);
+    }
+        
+
     function playClosing() {
         console.log(`closing`)
         document.getElementById('tabla').style.filter = 'invert(25%)';
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getEndingPosPcOf(gameData.targetList[i].posid));
-            pic.style.transition=`transform ${gameUI.spingTimeMs}ms ease-in-out`; // linear ease 
+            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
             pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(0.5, 0.5)`; // size:enlarge .. rotate:flip
         }
-        var r = Math.floor(Math.random() * gameDesc.ending.length);
-        setMsg(gameDesc.ending[r],"bigtext");
+
+        var msgArr = gameDesc.eval_bad;
+        if (gameData.attempts < gameDesc.modes[gameData.gameModeIdx].good) {
+            msgArr = gameDesc.eval_good;
+        }
+        var r = Math.floor(Math.random() * msgArr.length);
+        setMsg(msgArr[r],"bigtext");
 
         cookies.finished[gameData.gameModeIdx] += 1;
         myUpdateStat(cookies.bestMove, gameData.gameModeIdx, gameData.attempts);
@@ -348,24 +373,37 @@ img.back { z-index: 1; }
         var pic = document.getElementById(id);
         pic.classList.remove("med");
         pic.classList.add("top");
-        pic.style.transition=`transform ${gameUI.spingTimeMs}ms ease-in-out`; // linear ease 
+        pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(2,2) rotateX(${gameUI.spinDeg}deg)`; // size:enlarge .. rotate:flip
         const item = gameData.targetList.find(element => element.id == id);
-        setTimeout(swapPicImage, Math.floor(gameUI.spingTimeMs / 2), id, item.src);
-        setTimeout(resetPicTransition, gameUI.spingTimeMs, id);
+        setTimeout(swapPicImage, Math.floor(gameUI.spinTimeMs / 2), id, item.src);
+        setTimeout(resetPicTransition, gameUI.spinTimeMs, id);
     }
 
     function zoomInPic(id) {
         var pic = document.getElementById(id);
         const item = gameData.targetList.find(element => element.id == id);
         var pos = getPosPxOfPospc(getPosPcOf(item.posid));
-        pic.style.transition=`transform ${gameUI.spingTimeMs}ms ease-in-out`; // linear ease 
+        pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(1,1) rotateX(0deg)`; // size:enlarge .. rotate:flip
         if (false == gameData.isPairFound) {
-            setTimeout(swapPicImage, Math.floor(gameUI.spingTimeMs / 2), id);
+            setTimeout(swapPicImage, Math.floor(gameUI.spinTimeMs / 2), id);
         }
-        setTimeout(resetPicZindex, gameUI.spingTimeMs, id);
+        setTimeout(resetPicZindex, gameUI.spinTimeMs, id);
     }
+
+    function moveHomePic(id) {
+        var pic = document.getElementById(id);
+        const item = gameData.targetList.find(element => element.id == id);
+        var pos = getPosPxOfPospc(getPosPcOf(item.posid));
+        pic.classList.remove("med");
+        pic.classList.add("top");
+        pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+        pic.style.transform=`translate(${pos.x}px, ${pos.y}px)`;
+        setTimeout(resetPicZindex, gameUI.spinTimeMs, id);
+    }
+
+    
     function resetPicZindex(id) {
         var pic = document.getElementById(id);
         pic.classList.remove("top");
@@ -462,12 +500,13 @@ img.back { z-index: 1; }
             document.getElementById('toptable').style.width = iw + 'px';
         }
 
+        var mode = gameDesc.modes[gameData.gameModeIdx];
         if (cw > ch) {
-            gameDesc.W = gameDesc.numLongEdge;
-            gameDesc.H = gameDesc.numShortEdge;
+            gameDesc.W = mode.n1 * 2;
+            gameDesc.H = mode.n1;
         } else {
-            gameDesc.W = gameDesc.numShortEdge;
-            gameDesc.H = gameDesc.numLongEdge; 
+            gameDesc.W = mode.n1;
+            gameDesc.H = mode.n1 * 2; 
         }
 
         var backimg = document.getElementById('tabla');
@@ -672,6 +711,7 @@ display:inline-block;
         </div>
         <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
             <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;"></p>
+            <button onclick="closeAbout">Vissza</button>
         </div>
         <cite id="status" class="medium" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
         <div id='footer' style="position:absolute;float:left;left:0%;bottom:0%;width:100%;padding:0;margin:0;text-align:left;font-stretch:semi-condensed;">
