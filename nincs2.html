@@ -86,13 +86,14 @@ img.back { z-index: 1; }
                 "Te mondtad Főnök, olyan a szemem, mint a sasé!", "Egyet is nehéz találni, na de kettőt. És ilyen rövid idő alatt?" ]
         , eval_bad: [ "A te tudatalattid különleges tipikussággal jelentkezik.", "Elnézést a késésért, nem találták a cella kukcsát.", 
                 "Attól tartok ezt a számot nem ismerem.", "Kábító! Valóban az.", "A kábítót ágy értettem elképesztő.",
-                "Önök a mi szervezetünk remekművei.", "Úgy marad majd meg, mint ey zárójelbe tett bolonds-g, amit soha senki nem fog tudni megmagyarázni.",
+                "Önök a mi szervezetünk remekművei.", "Úgy marad majd meg, mint ey zárójelbe tett bolondság, amit soha senki nem fog tudni megmagyarázni.",
                 "Plátói? Mi a fenét jelent az, hogy plátói?" ]
 
     };
     var gameData = {
         steps: [], turn: 0, aktiv: 0, players: [], started: false, pics: [], gameModeIdx:0, 
         state: "menu",  // "menu", "wait4first", "zoomOut1st", "wait4second", "zoomOut2nd", "end", "about", 
+        state2: 0,
         targetList: [],  // { id, img_src, posid }
         totalPairs: 0,
         foundPairs: [],
@@ -114,7 +115,7 @@ img.back { z-index: 1; }
     var gameUI = {
         mainAreaWidthPc: 80, mainAreaHeightPc: 90, // figureSizePc: 10,
         cardBackImg: "images/back.jpg",
-        zoomedPosPc: 30, spinTimeMs:_shortMs, spinDeg:360,
+        zoomedPosPc: 25, spinTimeMs:_shortMs, spinDeg:360,
         fullscr: 0, muted: false,
         cache: { imgSizePx: 100, offsetXPx:1, offsetYPx:1 }
     };
@@ -133,19 +134,22 @@ img.back { z-index: 1; }
 
     function showAbout() {
         console.log(`About`)
-        gameData.state = 'about'
+        if (gameData.state != 'about') {
+            gameData.state2 = gameData.state;
+            gameData.state = 'about';
+        }
         document.getElementById('selectModeDiv').style.display = 'none';
         document.getElementById('aboutDiv').style.display = 'inline';
-        document.getElementById('tabla').style.filter = 'invert(25%)';
+        document.getElementById('tabla').style.display = 'none';
         var text = document.getElementById('texta');
         text.innerHTML = '<h1>Nincs kettő négy nélkül!</h1>'
-                       + 'Egyszerű pűrkereső memóriajáték BSTH filmek rajongói számára.<br><br>'
+                       + 'Egyszerű párkereső memóriajáték BSTH filmek rajongói számára.<br><br>'
                        + 'Játék terv, programmozás, blablala: szalabala<br>';
                        + 'Zene: xxx<br>';
                        + 'Köszönet: szalabala<br><br><br>';
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
-            var pos = getPosPxOfPospc(getEndingPosPcOf(gameData.targetList[i].posid));
+            var pos = getPosPxOfPospc(getPosPcOfPicIdx(i));
             pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
             pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(0.5, 0.5)`; // size:enlarge .. rotate:flip
         }
@@ -162,6 +166,22 @@ img.back { z-index: 1; }
         // add some return button
         //windows.onClick = function() {}
     }
+    function closeAbout() {
+        gameData.state = gameData.state2;
+        document.getElementById('aboutDiv').style.display = 'none';
+        document.getElementById('tabla').style.display = 'inline';
+        if (gameData.state == "menu") {
+            document.getElementById('selectModeDiv').style.display = 'inline';
+        } else {
+            for (var i = 0; i < gameData.targetList.length; i++) {
+                var pic = document.getElementById(gameData.targetList[i].id);
+                var pos = getPosPxOfPospc(getPosPcOfPicIdx(i));
+                pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+                pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
+            }
+        }
+
+    }
 
     function startOnce() {
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
@@ -175,6 +195,9 @@ img.back { z-index: 1; }
     function start() {
         gameData.state = 'menu'
         document.getElementById('tabla').src = gameDesc.tabla0;
+        document.getElementById('selectModeDiv').style.display = 'inline';
+        document.getElementById('restartbutton').style.display = 'none';
+        setMsg(_name, "bigtext");
 
         setTimeout(myResize, 10);  // initial placement
 
@@ -194,6 +217,10 @@ img.back { z-index: 1; }
             }
         }
 
+        for (var i = 0; i < gameData.targetList.length; i++) {
+            document.getElementById(gameData.targetList[i].id).remove();
+        }
+        gameData.targetList = [];
         /*
         for (var i=1;i < 2; i++ ) { // whatever
             //document.getElementById('p'+i).style.filter = 'invert(0%)';
@@ -211,6 +238,7 @@ img.back { z-index: 1; }
         console.log(`selectMode: ${n}`);
 
         gameData.gameModeIdx = n - 1;
+        //document.getElementById('selectModeDiv').style.display = 'none';
         for (var i=1;i <= 5; i++ ) {
             document.getElementById(`b${i}`).style.display = 'none';
         }
@@ -253,6 +281,7 @@ img.back { z-index: 1; }
         }
         setTimeout(myResize, 10);  // initial placement
 
+        setMsg("", "bigtext");
         myExtendArray(cookies.started, gameData.gameModeIdx, 0);
         cookies.started[gameData.gameModeIdx] += 1;
         storeCookies();
@@ -342,6 +371,8 @@ img.back { z-index: 1; }
     function playClosing() {
         console.log(`closing`)
         document.getElementById('tabla').style.filter = 'invert(25%)';
+        gameData.selectA = 0;
+        gameData.selectB = 0;
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getEndingPosPcOf(gameData.targetList[i].posid));
@@ -355,6 +386,7 @@ img.back { z-index: 1; }
         }
         var r = Math.floor(Math.random() * msgArr.length);
         setMsg(msgArr[r],"bigtext");
+        document.getElementById('restartbutton').style.display = 'inline';
 
         cookies.finished[gameData.gameModeIdx] += 1;
         myUpdateStat(cookies.bestMove, gameData.gameModeIdx, gameData.attempts);
@@ -381,7 +413,7 @@ img.back { z-index: 1; }
         pic.classList.remove("med");
         pic.classList.add("top");
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-        pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(2,2) rotateX(${gameUI.spinDeg}deg)`; // size:enlarge .. rotate:flip
+        pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale},${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
         const item = gameData.targetList.find(element => element.id == id);
         setTimeout(swapPicImage, Math.floor(gameUI.spinTimeMs / 2), id, item.src);
         setTimeout(resetPicTransition, gameUI.spinTimeMs, id);
@@ -446,7 +478,7 @@ img.back { z-index: 1; }
 
     function getPosPcOfPic(item) { // return { xpc, ypc }s
         if (gameData.state == 'menu') {
-            return { x_pc: 50, y_pc:-50, scale: 1 };
+            return { x_pc: 50, y_pc:-50, scale: 1, rotX: 0 };
         } else if (gameData.state == 'end' || gameData.state == 'about') {
             return getEndingPosPcOf(item.posid);
         } else {     // arg maybe imgId, it would be better used, to handled selectd position as well
@@ -463,12 +495,13 @@ img.back { z-index: 1; }
         return {
                 x_pc: Math.floor( ((100 - gameUI.mainAreaWidthPc) / 2) + ((posId % gameDesc.W) * (gameUI.mainAreaWidthPc) / (gameDesc.W -1))),
                 y_pc: Math.floor( ((100 - gameUI.mainAreaHeightPc) / 2) + (Math.floor(posId / gameDesc.W) * (gameUI.mainAreaHeightPc / (gameDesc.H - 1)))),
-                scale: 1
+                scale: 1,
+                rotX: 0
             };
     }
 
     function getPosPcOfSpecial(id) {
-        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, scale: 2, rotX: 0 };
+        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, scale: 1.75, rotX: 360 };
         if (id == "selectB") {
             pos.x_pc = 100 - pos.x_pc;  // invert X
         }
@@ -503,7 +536,9 @@ img.back { z-index: 1; }
 
         return {
             x: Math.floor((cw - iw) * pos_pc.x_pc / 100),  // + gameUI.OffsetXPx
-            y: Math.floor((ch - ih) * pos_pc.y_pc / 100)   // + gameUI.OffsetYPx
+            y: Math.floor((ch - ih) * pos_pc.y_pc / 100),   // + gameUI.OffsetYPx
+            scale: pos_pc.scale,
+            rotX: pos_pc.rotX
         };
     }
 
@@ -594,7 +629,7 @@ img.back { z-index: 1; }
             img.style.transition=''; // instant
             img.style.maxWidth = gameUI.cache.imgSizePx + 'px';    // instead of 'width' to keep ratio
             img.style.maxHeight = gameUI.cache.imgSizePx + 'px';
-            img.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pospc.scale}, ${pospc.scale})`; // size:enlarge .. rotate:flip
+            img.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pospc.scale}, ${pospc.scale}) rotateX(${pospc.rotX}deg)`; // size:enlarge .. rotate:flip
             //  rotateX(${pospc.rotX}deg)
             console.log(`  res ${i} ${gameData.targetList[i].id} ${img.style.left} ${img.style.top}` );
         }
@@ -763,10 +798,11 @@ display:inline-block;
         </div>
         <div id="selectModeDiv" style="position:fixed;float:left;left:10%;top:35%;width:80%;padding:0;text-align:center;">
             <p id="bigtext" class="xl" style="text-align:center;font-stretch:semi-condensed;">Nincs kettő négy nélkül!</p><br>
+            <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()">Menü</button>
         </div>
         <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
+            <button class="big modebutton" style="position:fixed;left:45%;top:45%;" onclick="closeAbout()">Vissza</button>
             <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;"></p>
-            <button onclick="closeAbout">Vissza</button>
         </div>
         <cite id="status" class="medium" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
         <div id='footer' style="position:absolute;float:left;left:0%;bottom:0%;width:100%;padding:0;margin:0;text-align:left;font-stretch:semi-condensed;">
@@ -775,6 +811,7 @@ display:inline-block;
         </div>
     </div>
     <!--https://www.buymeacoffee.com/szalabala
+            <button class="big modebutton" style="position:fixed;left:48%;top:48%;" onclick="closeAbout()">Vissza</button>
          style="float:left;border:1px solid black"
         <p id="status" class="medium" style="position:fixed;float:left;left:0%;bottom:0%;width:50%;padding:0;text-align:left;font-stretch:semi-condensed;"><a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img style="max-height:5vh" src="images/buymeacoffee.png"></a></p>
         <img id="tabla" class="back" src="data:," style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;max-height:99vh;max-width:99vw;z-index:-1;object-fit:contain;object-position:center center;">
@@ -783,4 +820,4 @@ display:inline-block;
         </div>
     -->
 </body>
-    </html>
+</html>
