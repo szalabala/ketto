@@ -268,11 +268,13 @@ img.back { z-index: 1; }
             gameData.state = "wait4second";
             gameData.isPairFound = false;
             setStatusMsg(`${gameData.attempts}. lépés`);
-            zoomOutPic(id, getPosPxOfPospc( {x_pc:gameUI.zoomedPosPc, y_pc:50} ));
+            //zoomOutPic(id, getPosPxOfPospc( {x_pc:gameUI.zoomedPosPc, y_pc:50} ));
+            zoomOutPic(id, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
         } else if (gameData.state == 'wait4second' && id != gameData.selectA) {
             gameData.selectB = id;
             gameData.state = "evaluate";
-            zoomOutPic(id, getPosPxOfPospc( {x_pc:(100-gameUI.zoomedPosPc), y_pc:50} ));
+            //zoomOutPic(id, getPosPxOfPospc( {x_pc:(100-gameUI.zoomedPosPc), y_pc:50} ));
+            zoomOutPic(id, getPosPxOfPospc(getPosPcOfSpecial("selectB")));
             setTimeout(evaluateSelection(), _longMs * 2);
         //} else {
         }
@@ -301,11 +303,16 @@ img.back { z-index: 1; }
     function changeState(newState) {
         if (newState == "wait4first") {
             if (gameData.selectA != '') {
-                zoomInPic(gameData.selectA);
+                const picId = gameData.selectA;
+                gameData.selectA = 0;
+                zoomInPic(picId);
             }
             if (gameData.selectB != '') {
-                zoomInPic(gameData.selectB);
+                const picId = gameData.selectB;
+                gameData.selectB = 0;
+                zoomInPic(picId);
             }
+
             gameData.isPairFound = false;
 
             if (gameData.gameModeIdx == 4 && gameData.attempts % 5 == 0) {
@@ -382,8 +389,12 @@ img.back { z-index: 1; }
 
     function zoomInPic(id) {
         var pic = document.getElementById(id);
+        // LOVAS
         const item = gameData.targetList.find(element => element.id == id);
-        var pos = getPosPxOfPospc(getPosPcOf(item.posid));
+        var pospc = getPosPcOfPic(item);
+        var pos = getPosPxOfPospc(pospc);
+
+        //var pos = getPosPxOfPospc(getPosPcOf(item.posid));
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(1,1) rotateX(0deg)`; // size:enlarge .. rotate:flip
         if (false == gameData.isPairFound) {
@@ -395,7 +406,7 @@ img.back { z-index: 1; }
     function moveHomePic(id) {
         var pic = document.getElementById(id);
         const item = gameData.targetList.find(element => element.id == id);
-        var pos = getPosPxOfPospc(getPosPcOf(item.posid));
+        var pos = getPosPxOfPospc(getPosPcOfPic(item));
         pic.classList.remove("med");
         pic.classList.add("top");
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
@@ -423,18 +434,62 @@ img.back { z-index: 1; }
         pic.src = imgsrc;
     }
 
-    function getPosPcOf(posId) { // return { xpc, ypc }s
-        return {
-            x_pc: Math.floor( ((100 - gameUI.mainAreaWidthPc) / 2) + ((posId % gameDesc.W) * (gameUI.mainAreaWidthPc) / (gameDesc.W -1))),
-            y_pc: Math.floor( ((100 - gameUI.mainAreaHeightPc) / 2) + (Math.floor(posId / gameDesc.W) * (gameUI.mainAreaHeightPc / (gameDesc.H - 1))))
-        };
+    function getPosPcOfPicId(id) {
+        const item = gameData.targetList.find(element => element.id == id);
+        return getPosPcOfPic(item);
+    } // return { xpc, ypc }s
+
+    function getPosPcOfPicIdx(idx) {
+        const item = gameData.targetList[idx]; //.find(element => element.id == gameData.selectA);
+        return getPosPcOfPic(item);
+    } // return { xpc, ypc }s
+
+    function getPosPcOfPic(item) { // return { xpc, ypc }s
+        if (gameData.state == 'menu') {
+            return { x_pc: 50, y_pc:-50, scale: 1 };
+        } else if (gameData.state == 'end' || gameData.state == 'about') {
+            return getEndingPosPcOf(item.posid);
+        } else {     // arg maybe imgId, it would be better used, to handled selectd position as well
+            if (gameData.selectA == item.id) {
+                return getPosPcOfSpecial("selectA");
+            } else if (gameData.selectB == item.id) {
+                return getPosPcOfSpecial("selectB");
+            }
+            return getPosPcOfPosId(item.posid);
+        }
     }
 
-    function getEndingPosPcOf(idx) { // return { xpc, ypc }s
+    function getPosPcOfPosId(posId) { // return { x_pc, y_pc } -- standard in-game layout
+        return {
+                x_pc: Math.floor( ((100 - gameUI.mainAreaWidthPc) / 2) + ((posId % gameDesc.W) * (gameUI.mainAreaWidthPc) / (gameDesc.W -1))),
+                y_pc: Math.floor( ((100 - gameUI.mainAreaHeightPc) / 2) + (Math.floor(posId / gameDesc.W) * (gameUI.mainAreaHeightPc / (gameDesc.H - 1)))),
+                scale: 1
+            };
+    }
+
+    function getPosPcOfSpecial(id) {
+        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, scale: 2, rotX: 0 };
+        if (id == "selectB") {
+            pos.x_pc = 100 - pos.x_pc;  // invert X
+        }
+        if (gameDesc.W < gameDesc.H) {  // rotate 90, aka swap x - y
+            const tmp = pos.x_pc;
+            pos.x_pc = pos.y_pc;
+            pos.y_pc = tmp;
+        }
+        return pos;
+    }
+
+    function getEndingPosPcOf(posId) { // return { x_pc, y_pc } -- 'parking positions'
+        // align images on the long-edge of the screen
         if (gameDesc.W > gameDesc.H) {
-            return { x_pc: Math.floor( 100 / (gameData.totalPairs - 1) * Math.floor(idx / 2) ), y_pc: Math.floor( (idx % 2 == 0) ? 0 : 100) };
+            return { x_pc: Math.floor( 100 / (gameData.totalPairs - 1) * Math.floor(posId / 2) ),
+                     y_pc: Math.floor( (posId % 2 == 0) ? 5 : 95),
+                     scale: 0.5 };
         } else {
-            return { x_pc: Math.floor( (idx % 2 == 0) ? 0 : 100), y_pc: Math.floor( 100/gameData.totalPairs * Math.floor(idx / 2) )};
+            return { x_pc: Math.floor( (posId % 2 == 0) ? 5 : 95),
+                     y_pc: Math.floor( 100/gameData.totalPairs * Math.floor(posId / 2) ),
+                     scale: 0.5 };
         }
     }
 
@@ -531,16 +586,16 @@ img.back { z-index: 1; }
 
         var N = gameDesc.W * gameDesc.H;   //number of images to match
         for (var i = 0; i < gameData.targetList.length; i++) {
-            console.log(` r ${i} ${gameData.targetList[i].id}`)
-            var pos = getPosPxOfPospc(getPosPcOf(gameData.targetList[i].posid));
+            //console.log(` r ${i} ${gameData.targetList[i].id}`)
+            var pospc = getPosPcOfPicIdx(i);
+            var pos = getPosPxOfPospc(pospc);
+
             var img = document.getElementById(gameData.targetList[i].id);
             img.style.transition=''; // instant
-//            img.style.width = gameUI.cache.imgSizePx + 'px';
-//            img.style.height = gameUI.cache.imgSizePx + 'px';
-            img.style.maxWidth = gameUI.cache.imgSizePx + 'px';
+            img.style.maxWidth = gameUI.cache.imgSizePx + 'px';    // instead of 'width' to keep ratio
             img.style.maxHeight = gameUI.cache.imgSizePx + 'px';
-            // instead of img.style.left img.style.top 
-            img.style.transform=`translate(${pos.x}px, ${pos.y}px)`; // size:enlarge .. rotate:flip
+            img.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pospc.scale}, ${pospc.scale})`; // size:enlarge .. rotate:flip
+            //  rotateX(${pospc.rotX}deg)
             console.log(`  res ${i} ${gameData.targetList[i].id} ${img.style.left} ${img.style.top}` );
         }
     }
