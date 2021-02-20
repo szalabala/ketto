@@ -62,11 +62,8 @@ img.back { z-index: 1; }
         , tabla: "kincsaminincs-terkep1000d.jpg", tabla0: "images/nincs2header_46d.jpg", tabla_end: "ending.jpg"
         , music: "audio/movin-cruisin-xylo.mp3", music0: "audio/movin-crusin-cover1.mp3"
         , figure_scale: 15 // % of table-height, cc 15vh
-        , figures: [
-            { name: "Charlie", step: 0, kincs: false, imgsrc: "fig1c.png", img2src: "fig1d.png", img2step: 19 },
-            { name: "Alan", step: 0, kincs: false, imgsrc: "fig2c.png", img2src: "fig2d.png", img2step: 19 },
-            { name: "Frisco", step: 0, kincs: false, imgsrc: "fig4c.png", img2src: "fig4.png", img2step: 44 },
-            { name: "Kalóz", step: 0, kincs: false, imgsrc: "fig5c.png", img2src: "fig5.png", img2step: 32 } ]
+        , image: { imgClosed: 'images/door2a.png', imgOpen: 'images/door2b.png', imgEmpty:"data:," }
+        , misc: { demo1: 'd1', demo2: 'd2' }
         , modes: [
             { id:1, match:'same', n1: 2, good: 8, pairs: [3, 17, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
             { id:2, match:'same', n1: 3, good: 18, pairs: [2, 4, 5, 18, 7, 9, 10, 11, 12, 13, 15, 17], name:"Zsugabubus", desc:"Nem vagyok valami nagy játékos." },
@@ -133,7 +130,7 @@ img.back { z-index: 1; }
     }
 
     function showAbout() {
-        console.log(`About`)
+        //console.log(`About`)
         if (gameData.state != 'about') {
             gameData.state2 = gameData.state;
             gameData.state = 'about';
@@ -143,10 +140,10 @@ img.back { z-index: 1; }
         document.getElementById('tabla').style.display = 'none';
         var text = document.getElementById('texta');
         text.innerHTML = '<h1>Nincs kettő négy nélkül!</h1>'
-                       + 'Egyszerű párkereső memóriajáték BSTH filmek rajongói számára.<br><br>'
-                       + 'Játék terv, programmozás, blablala: szalabala<br>';
-                       + 'Zene: xxx<br>';
-                       + 'Köszönet: szalabala<br><br><br>';
+                       + 'Egyszerű párkereső memóriajáték Bud Spencer és Terence Hill filmek rajongói számára.<br><br>'
+                       + 'Játék terv, programozás, blablala: szalabala<br>'
+                       + 'Zene: majd az is lesz<br>'
+                       + 'Köszönet: akik segítettek<br><br>';
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getPosPcOfPicIdx(i));
@@ -187,30 +184,38 @@ img.back { z-index: 1; }
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
             addButton(i, 'selectModeDiv', i, '');
         }
+        addImage(gameDesc.misc.demo1, gameDesc.image.imgEmpty);
+        addImage(gameDesc.misc.demo2, gameDesc.image.imgEmpty);
+        document.getElementById(gameDesc.misc.demo1).style.display = 'none';
+        document.getElementById(gameDesc.misc.demo2).style.display = 'none';
         restoreCookies();
         start();
     }
-
 
     function start() {
         gameData.state = 'menu'
         document.getElementById('tabla').src = gameDesc.tabla0;
         document.getElementById('selectModeDiv').style.display = 'inline';
         document.getElementById('restartbutton').style.display = 'none';
+        document.getElementById(gameDesc.misc.demo1).style.display = 'none';
+        document.getElementById(gameDesc.misc.demo2).style.display = 'none';
         setMsg(_name, "bigtext");
+        setStatusMsg('A Hangyás-A-Hídon bemutatja...');
 
         setTimeout(myResize, 10);  // initial placement
 
-        console.log(`ss ${cookies.finished}`)
+        //console.log(`ss ${cookies.finished}`)
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
             var but = document.getElementById(`b${i}`);
             but.style.display = 'initial';
-            console.log(`sss ${i} ${cookies.finished} ${cookies.finished.length} ${cookies.finished[i-1]}`)
+            //console.log(`sss ${i} ${cookies.finished} ${cookies.finished.length} ${cookies.finished[i-1]}`)
             if (i == 1 || (cookies.finished.length >= i && cookies.finished[i-2] > 0)) {
                 but.disabled = false;
-                but.style.color = 'darkgreen';
-                but.style.border = '5px solid green';
-                setTimeout(myBlink, 5 + i*300, but);
+                but.src = gameDesc.image.imgOpen;
+                //but.style.color = 'darkgreen';
+                //but.style.border = '5px solid green';
+                myBlink(but,false);
+                setTimeout(myBlink, 5 + i*300+5, but);
             } else {
                 but.disabled = true;
                 but.style.color = 'pink';
@@ -235,18 +240,50 @@ img.back { z-index: 1; }
     }
 
     function selectMode(n=1) {
-        console.log(`selectMode: ${n}`);
+        //console.log(`selectMode: ${n}`);
 
         gameData.gameModeIdx = n - 1;
         //document.getElementById('selectModeDiv').style.display = 'none';
         for (var i=1;i <= 5; i++ ) {
             document.getElementById(`b${i}`).style.display = 'none';
         }
-        restartGame();
+        //restartGame();
+        showMode();
+        setTimeout(restartGame,  _longMs + gameUI.spinTimeMs);
     }
 
     function showMode() {
+        var d1 = document.getElementById(gameDesc.misc.demo1);
+        var d2 = document.getElementById(gameDesc.misc.demo2);
+        d1.src = 'images/1a.jpg';
+        if (gameDesc.modes[gameData.gameModeIdx].match == 'same') {
+            d2.src = 'images/1a.jpg';
+        } else {
+            d2.src = 'images/1b.jpg';
+        }
+        d1.style.display='inline';
+        d2.style.display='inline';
+        
+        var pos1 = getPosPxOfPospc(getPosPcOfSpecial("selectA"));
+        var pos2 = getPosPxOfPospc(getPosPcOfSpecial("selectB"));
+        d1.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+        d1.style.transform=`translate(${pos1.x}px, ${pos1.y}px) scale(${pos1.scale},${pos1.scale}) rotateX(${pos1.rotX}deg)`; // size:enlarge .. rotate:flip
+        d2.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+        d2.style.transform=`translate(${pos2.x}px, ${pos2.y}px) scale(${pos2.scale},${pos2.scale}) rotateX(${pos2.rotX}deg)`; // size:enlarge .. rotate:flip
 
+        setTimeout(function() {
+                d1.style.transform=`translate(${pos1.x}px, ${pos1.y}px)`;
+                d2.style.transform=`translate(${pos2.x}px, ${pos2.y}px)`;
+                d1.style.display='none';
+                d2.style.display='none';
+            }, _longMs + gameUI.spinTimeMs)
+        /*
+        d1.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+        zoomOutPic(gameDesc.misc.demo1, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
+        zoomOutPic(gameDesc.misc.demo2, getPosPxOfPospc(getPosPcOfSpecial("selectB")));
+        setTimeout(zoomInPic,  _longMs + gameUI.spinTimeMs, gameDesc.misc.demo1, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
+        setTimeout(zoomInPic,  _longMs + gameUI.spinTimeMs, gameDesc.misc.demo2, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
+        */
     }
 
     function restartGame() {
@@ -267,7 +304,7 @@ img.back { z-index: 1; }
         }
         shuffle(poslist);
         
-        console.log(`start ${list} x ${poslist}`);
+        //console.log(`start ${list} x ${poslist}`);
         for (var i = 0; i < N; i++) {  // add tiles
             var img2sel = (mode.match == 'same') ? 'a' : 'b';
             gameData.targetList.push( { id: `p${1+2*i}`, pairId: i, src: `images/${list[i]}a.jpg`, posid: poslist[i*2] } );
@@ -290,7 +327,7 @@ img.back { z-index: 1; }
     }
 
     function onClickPic(id) {
-        console.log(`click ${id}`);
+        //console.log(`click ${id}`);
         if (gameData.state == 'wait4first') {
             gameData.attempts += 1;
             gameData.selectA = id;
@@ -309,7 +346,7 @@ img.back { z-index: 1; }
         }
     }
     function evaluateSelection() {
-        console.log(`evaluate ${gameData.selectA} ? ${gameData.selectB}`);
+        //console.log(`evaluate ${gameData.selectA} ? ${gameData.selectB}`);
 
         const itemA = gameData.targetList.find(element => element.id == gameData.selectA);
         const itemB = gameData.targetList.find(element => element.id == gameData.selectB);
@@ -358,7 +395,7 @@ img.back { z-index: 1; }
     function swapTwoCards() {
         var r1 = Math.floor(Math.random() * gameData.targetList.length);
         var r2 = Math.floor(Math.random() * gameData.targetList.length);
-        console.log(`swap ${r1} -- ${r2}`);
+        //console.log(`swap ${r1} -- ${r2}`);
         var tmp = gameData.targetList[r1].posid;
         gameData.targetList[r1].posid = gameData.targetList[r2].posid;
         gameData.targetList[r2].posid = tmp;
@@ -369,7 +406,7 @@ img.back { z-index: 1; }
         
 
     function playClosing() {
-        console.log(`closing`)
+        //console.log(`closing`)
         document.getElementById('tabla').style.filter = 'invert(25%)';
         gameData.selectA = 0;
         gameData.selectB = 0;
@@ -419,12 +456,13 @@ img.back { z-index: 1; }
         setTimeout(resetPicTransition, gameUI.spinTimeMs, id);
     }
 
-    function zoomInPic(id) {
+    function zoomInPic(id, pos) {
         var pic = document.getElementById(id);
         // LOVAS
         const item = gameData.targetList.find(element => element.id == id);
-        var pospc = getPosPcOfPic(item);
-        var pos = getPosPxOfPospc(pospc);
+        if (!pos) {
+            pos = getPosPxOfPospc(getPosPcOfPic(item));
+        }
 
         //var pos = getPosPxOfPospc(getPosPcOf(item.posid));
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
@@ -459,7 +497,7 @@ img.back { z-index: 1; }
     }
 
     function swapPicImage(id, imgsrc=gameUI.cardBackImg) {
-        console.log(`swapPicImage ${id}`);
+        //console.log(`swapPicImage ${id}`);
         var pic = document.getElementById(id);
         //const item = gameData.targetList.find(element => element.id == id);
         //addImage(gameData.targetList[i].id, gameData.targetList[i].src);
@@ -532,7 +570,7 @@ img.back { z-index: 1; }
         var iw = (img ? img.clientWidth : gameUI.cache.imgSizePx);
         var ih = (img ? img.clientHeight : gameUI.cache.imgSizePx);
 
-        console.log(`  pospc .. ${pos_pc.x_pc} ${pos_pc.y_pc}`);
+        //console.log(`  pospc .. ${pos_pc.x_pc} ${pos_pc.y_pc}`);
 
         return {
             x: Math.floor((cw - iw) * pos_pc.x_pc / 100),  // + gameUI.OffsetXPx
@@ -542,8 +580,8 @@ img.back { z-index: 1; }
         };
     }
 
-    function addImage(id,isrc) {
-        console.log(` add ${id} of ${isrc}`);
+    function addImage(id, isrc, parent='toptable') {
+        //console.log(` add ${id} of ${isrc}`);
         //<button id="b3" class="xl modebutton" onClick="selectMode(3)">3</button>
         var img = document.createElement('img'); 
         img.id = id;
@@ -559,13 +597,20 @@ img.back { z-index: 1; }
     }
 
     function addButton(idx,parent,text,defstyle) {
-        console.log(` add ${idx}`);
-        var but = document.createElement('button'); 
+        //console.log(` add ${idx}`);
+        var but = document.createElement('img'); 
         but.id = `b${idx}`;
-        but.classList.add("xl");
-        but.classList.add("modebutton");
+        but.src = gameDesc.image.imgClosed;
+        but.style.maxWidth = "30vw";
+        but.style.maxHeight = "30vh";
         but.onclick = function() { selectMode(idx); };
+        /*
+        but.classList.add("modebutton");
+        but.style.border = '2px solid white';
+        var but = document.createElement('button'); 
+        but.classList.add("xl");
         but.innerHTML = text;
+        */
         document.getElementById(parent).appendChild(but);
     }
 
@@ -578,7 +623,7 @@ img.back { z-index: 1; }
     }
 
     function myResize() {
-        console.log(`resize`);
+        //console.log(`resize`);
         var cw = document.documentElement.clientWidth;
         var ch = document.documentElement.clientHeight;
         var iw = window.innerWidth;
@@ -631,7 +676,7 @@ img.back { z-index: 1; }
             img.style.maxHeight = gameUI.cache.imgSizePx + 'px';
             img.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pospc.scale}, ${pospc.scale}) rotateX(${pospc.rotX}deg)`; // size:enlarge .. rotate:flip
             //  rotateX(${pospc.rotX}deg)
-            console.log(`  res ${i} ${gameData.targetList[i].id} ${img.style.left} ${img.style.top}` );
+            //console.log(`  res ${i} ${gameData.targetList[i].id} ${img.style.left} ${img.style.top}` );
         }
     }
     function setStyle(elem,styleitem,value) {
@@ -647,7 +692,7 @@ img.back { z-index: 1; }
         if (isSet) {
             elem.style.animation="blink1 2s infinite";
         } else {
-            elem.style.removeAttribute('animation');
+            elem.style.removeProperty('animation');
         }
         elem.style.tranform="none";
     }
@@ -688,7 +733,6 @@ img.back { z-index: 1; }
     }
 
     function toggleAudio() {
-      console.log(`mute:${gameUI.muted}`);
       if (gameUI.muted == false) {
             gameUI.muted = true;
             document.getElementById('myaudio').pause();
@@ -742,12 +786,10 @@ img.back { z-index: 1; }
         //var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
         var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};path=/;`;
         document.cookie = cookiestr;
-        console.log(` store cookie ${cookiestr}`);
     }
     function deleteCookie(name) {
         var cookiestr = `${name}=;max-age=0;path=/;`;
         document.cookie = cookiestr;
-        console.log(` delete cookie ${cookiestr}`);
     }
 
     function readCookieA(name) {
@@ -774,7 +816,6 @@ img.back { z-index: 1; }
     }
     function getCookie(name) {
         var cookieArr = document.cookie.split(";");
-        console.log(`xx${document.cookie}xx`);
         for (var i = 0; i < cookieArr.length; i++) {
             var cookiePair = cookieArr[i].split("=");
             if (name == cookiePair[0].trim()) {
@@ -793,12 +834,12 @@ display:inline-block;
     <div id="toptable" style="position:absolute;width:100%;height:100%;padding:0;">
         <img id="tabla" class="back" src="images/nincs2header_46.jpg" style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;width:90%;height:90%;max-height:90vh;max-width:90vw;z-index:-1;object-fit:contain;object-position:center center;">
         <div style="position:relative;float:right;width:90%;text-align:right;vertical-align:top;">
-            <p id='volume' style="text-align:right"><img src="images/volume2a.png" style="max-height:4vmin" onclick="toggleAudio()"><img id='fullscr' src="images/fullscr2a.png" style="max-height:5vmin" onclick="toggleFullScr()">
-            <br><img src="images/about.png" style="max-height:4vmin" onclick="showAbout()"></p>
+            <p id='volume' style="text-align:right"><img src="images/volume2a.png" style="max-height:5vmin" onclick="toggleAudio()"><img id='fullscr' src="images/fullscr2a.png" style="max-height:5vmin" onclick="toggleFullScr()">
+            <br><img src="images/about.png" style="max-height:10vmin" onclick="showAbout()"></p>
         </div>
         <div id="selectModeDiv" style="position:fixed;float:left;left:10%;top:35%;width:80%;padding:0;text-align:center;">
             <p id="bigtext" class="xl" style="text-align:center;font-stretch:semi-condensed;">Nincs kettő négy nélkül!</p><br>
-            <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()">Menü</button>
+            <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()">Étlap</button>
         </div>
         <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
             <button class="big modebutton" style="position:fixed;left:45%;top:45%;" onclick="closeAbout()">Vissza</button>
