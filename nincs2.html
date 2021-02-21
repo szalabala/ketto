@@ -38,7 +38,7 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
 img.top { z-index: 3; }
 img.med { z-index: 2; }
 img.back { z-index: 1; }
-.modebutton { border: 5px solid red;  border-radius:25%; padding:1%; margin:1%; text-align: center; }
+.modebutton { border: 5px solid teal;  border-radius:35%; padding:1%; margin:1%; text-align: center; color:blue }
 @keyframes blink1{
   0%{ transform: scale(1,1); }
   5%{ transform: scale(1.05,1.05); }
@@ -60,6 +60,7 @@ img.back { z-index: 1; }
         , start_message: "<span style=\"color:blue;text-decoration:blink;\">" + "lovas" + "</span>"
         , restart_message: "<span style=\"color:blue;text-decoration:blink;\">Kattints a Puffinra az újrakezdéshez</span>"
         , tabla: "kincsaminincs-terkep1000d.jpg", tabla0: "images/nincs2header_46d.jpg", tabla_end: "ending.jpg"
+        , tabla_w:"images/nincs2back_w.jpg", tabla_h:"images/nincs2back_h.jpg"
         , music: "audio/movin-cruisin-xylo.mp3", music0: "audio/movin-crusin-cover1.mp3"
         , figure_scale: 15 // % of table-height, cc 15vh
         , image: { imgClosed: 'images/door2a.png', imgOpen: 'images/door2b.png', imgEmpty:"data:," }
@@ -71,7 +72,8 @@ img.back { z-index: 1; }
             { id:4, match:'ab', n1: 4, good: 50, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Charlie" },
             { id:5, match:'ab', n1: 4, good: 40, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Paragulis", desc:"Golyózott volna a szemed a trükkjeitől." }
         ]
-        , messages: { intro: "Keresd a párját! Kettesével megnézheted a kártyákat.", 
+        , messages: { intro: "Keresd a párját! Kettesével megnézheted a kártyákat.",
+                      showMode: "Keresd a párokat!",
                       step1: "Kattints egy kártyára!", 
                       step2: "Válasz egy másik kártyát!", 
                       evalPass: "Ügyes vagy!",
@@ -89,7 +91,7 @@ img.back { z-index: 1; }
     };
     var gameData = {
         steps: [], turn: 0, aktiv: 0, players: [], started: false, pics: [], gameModeIdx:0, 
-        state: "menu",  // "menu", "wait4first", "zoomOut1st", "wait4second", "zoomOut2nd", "end", "about", 
+        state: "menu",  // "menu", "wait4first", "zoomOut1st", "wait4second", "zoomOut2nd", "closing", "about", 
         state2: 0,
         targetList: [],  // { id, img_src, posid }
         totalPairs: 0,
@@ -119,18 +121,31 @@ img.back { z-index: 1; }
 
     function myLoad() {
         const queryString = window.location.search;
+        console.log(`url params: ${queryString}`)
         if (queryString != '') {
             console.log(queryString);
 
             const urlParams = new URLSearchParams(queryString);
+            if (urlParams.has('fast')) {
+                _longMs = 100;
+                _shortMs = 50;
+                gameUI.spinTimeMs = 50;
+            }
+
             if (urlParams.has('frameMs')) {
                 frameMs = parseInt(urlParams.get('frameMs'))
+            }
+            if (urlParams.has('lvl')) {
+                var lvl = parseInt(urlParams.get('lvl'));
+                for  (var i = 0; i < lvl; i++) {
+                    cookies.started[i] = Math.max(cookies.started[i], 1);
+                    cookies.finished[i] = Math.max(cookies.finished[i], 1);
+                }
             }
         }
     }
 
     function showAbout() {
-        //console.log(`About`)
         if (gameData.state != 'about') {
             gameData.state2 = gameData.state;
             gameData.state = 'about';
@@ -169,6 +184,8 @@ img.back { z-index: 1; }
         document.getElementById('tabla').style.display = 'inline';
         if (gameData.state == "menu") {
             document.getElementById('selectModeDiv').style.display = 'inline';
+        } else if (gameData.state == "closing") {
+            document.getElementById('selectModeDiv').style.display = 'inline';
         } else {
             for (var i = 0; i < gameData.targetList.length; i++) {
                 var pic = document.getElementById(gameData.targetList[i].id);
@@ -188,13 +205,15 @@ img.back { z-index: 1; }
         addImage(gameDesc.misc.demo2, gameDesc.image.imgEmpty);
         document.getElementById(gameDesc.misc.demo1).style.display = 'none';
         document.getElementById(gameDesc.misc.demo2).style.display = 'none';
+        document.getElementById('tabla').style.filter = 'invert(25%)';
         restoreCookies();
+        myLoad();
         start();
     }
 
     function start() {
         gameData.state = 'menu'
-        document.getElementById('tabla').src = gameDesc.tabla0;
+        document.getElementById('selectModeDiv').style.top = '10%';
         document.getElementById('selectModeDiv').style.display = 'inline';
         document.getElementById('restartbutton').style.display = 'none';
         document.getElementById(gameDesc.misc.demo1).style.display = 'none';
@@ -202,7 +221,7 @@ img.back { z-index: 1; }
         setMsg(_name, "bigtext");
         setStatusMsg('A Hangyás-A-Hídon bemutatja...');
 
-        setTimeout(myResize, 10);  // initial placement
+        setTimeout(myResize, 10);  // do initial re-placement
 
         //console.log(`ss ${cookies.finished}`)
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
@@ -212,10 +231,8 @@ img.back { z-index: 1; }
             if (i == 1 || (cookies.finished.length >= i && cookies.finished[i-2] > 0)) {
                 but.disabled = false;
                 but.src = gameDesc.image.imgOpen;
-                //but.style.color = 'darkgreen';
-                //but.style.border = '5px solid green';
                 myBlink(but,false);
-                setTimeout(myBlink, 5 + i*300+5, but);
+                setTimeout(myBlink, i * Math.floor(_longMs/8) + 5, but);
             } else {
                 but.disabled = true;
                 but.style.color = 'pink';
@@ -235,7 +252,7 @@ img.back { z-index: 1; }
         }
         */
 
-        myLoad();
+        //myLoad();
         //restartGame();
     }
 
@@ -255,6 +272,8 @@ img.back { z-index: 1; }
     function showMode() {
         var d1 = document.getElementById(gameDesc.misc.demo1);
         var d2 = document.getElementById(gameDesc.misc.demo2);
+
+        setStatusMsg(gameDesc.messages.showMode);
         d1.src = 'images/1a.jpg';
         if (gameDesc.modes[gameData.gameModeIdx].match == 'same') {
             d2.src = 'images/1a.jpg';
@@ -407,7 +426,8 @@ img.back { z-index: 1; }
 
     function playClosing() {
         //console.log(`closing`)
-        document.getElementById('tabla').style.filter = 'invert(25%)';
+        //document.getElementById('tabla').style.filter = 'invert(25%)';
+        gameData.state = "closing";
         gameData.selectA = 0;
         gameData.selectB = 0;
         for (var i = 0; i < gameData.targetList.length; i++) {
@@ -422,6 +442,7 @@ img.back { z-index: 1; }
             msgArr = gameDesc.eval_good;
         }
         var r = Math.floor(Math.random() * msgArr.length);
+        document.getElementById('selectModeDiv').style.top = '30%';
         setMsg(msgArr[r],"bigtext");
         document.getElementById('restartbutton').style.display = 'inline';
 
@@ -601,7 +622,7 @@ img.back { z-index: 1; }
         var but = document.createElement('img'); 
         but.id = `b${idx}`;
         but.src = gameDesc.image.imgClosed;
-        but.style.maxWidth = "30vw";
+        but.style.maxWidth = "25vw";
         but.style.maxHeight = "30vh";
         but.onclick = function() { selectMode(idx); };
         /*
@@ -636,12 +657,19 @@ img.back { z-index: 1; }
         }
 
         var mode = gameDesc.modes[gameData.gameModeIdx];
+        var isBeforeLandscape = gameDesc.W > gameDesc.H
         if (cw > ch) {
             gameDesc.W = mode.n1 * 2;
             gameDesc.H = mode.n1;
+            if (!isBeforeLandscape) {
+                document.getElementById('tabla').src = gameDesc.tabla_w;
+            }
         } else {
             gameDesc.W = mode.n1;
             gameDesc.H = mode.n1 * 2; 
+            if (isBeforeLandscape) {
+                document.getElementById('tabla').src = gameDesc.tabla_h;
+            }
         }
 
         var backimg = document.getElementById('tabla');
@@ -690,7 +718,7 @@ img.back { z-index: 1; }
     }
     function myBlink(elem, isSet=true) {
         if (isSet) {
-            elem.style.animation="blink1 2s infinite";
+            elem.style.animation=`blink1 ${2 * _longMs}ms infinite`;
         } else {
             elem.style.removeProperty('animation');
         }
@@ -832,20 +860,20 @@ display:inline-block;
 <body onload="startOnce();" onresize="myResize();">
     <audio id="myaudio" src="audio/movin-cruisin-xylo.mp3" autoplay loop> </audio>
     <div id="toptable" style="position:absolute;width:100%;height:100%;padding:0;">
-        <img id="tabla" class="back" src="images/nincs2header_46.jpg" style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;width:90%;height:90%;max-height:90vh;max-width:90vw;z-index:-1;object-fit:contain;object-position:center center;">
+        <img id="tabla" class="back" src="images/nincs2back_w.jpg" style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;width:90%;height:90%;max-height:90vh;max-width:90vw;z-index:-1;object-fit:contain;object-position:center center;">
         <div style="position:relative;float:right;width:90%;text-align:right;vertical-align:top;">
             <p id='volume' style="text-align:right"><img src="images/volume2a.png" style="max-height:5vmin" onclick="toggleAudio()"><img id='fullscr' src="images/fullscr2a.png" style="max-height:5vmin" onclick="toggleFullScr()">
             <br><img src="images/about.png" style="max-height:10vmin" onclick="showAbout()"></p>
         </div>
-        <div id="selectModeDiv" style="position:fixed;float:left;left:10%;top:35%;width:80%;padding:0;text-align:center;">
-            <p id="bigtext" class="xl" style="text-align:center;font-stretch:semi-condensed;">Nincs kettő négy nélkül!</p><br>
-            <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()">Étlap</button>
+        <div id="selectModeDiv" style="position:fixed;float:left;left:10%;top:10%;width:80%;padding:0;text-align:center;">
+            <p id="bigtext" class="xl" style="text-align:center;font-stretch:semi-condensed">Nincs kettő négy nélkül!</p><br>
+            <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()"><img src="images/door_key.png" style="max-height:15vw;max-height:15vh"></button>
         </div>
         <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
             <button class="big modebutton" style="position:fixed;left:45%;top:45%;" onclick="closeAbout()">Vissza</button>
             <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;"></p>
         </div>
-        <cite id="status" class="medium" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
+        <cite id="status" class="big" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
         <div id='footer' style="position:absolute;float:left;left:0%;bottom:0%;width:100%;padding:0;margin:0;text-align:left;font-stretch:semi-condensed;">
             <a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
             <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;"><i>&copy; Copyright 2021 szalabala - grafika: TBD</i></cite>
