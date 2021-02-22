@@ -24,7 +24,7 @@ html, body {
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 h2 { font-size:5vmin; } 
-.xl { font-size:10vmin; font-weight: bolder; }
+.xl { font-size:10vmin; font-weight: bolder; text-shadow:1px 1px 5px gold, 0 10px 25px white, 0 -10px 25px white; }
 .big { font-size:5vmin }
 .medium { font-size:4vmin }
 .small { font-size:3vmin }
@@ -49,6 +49,15 @@ img.back { z-index: 1; }
   10%{ transform: scale(1.2,1.2); }
   20%{ transform: scale(1,1); }
 }
+@keyframes closed{
+  10%{ transform: scale(1.05,1.05) translate(0px, -5px); }
+  20%{ transform: scale(1,1) translate(5px, 0px); }
+  30%{ transform: scale(1.1,1.1) translate(5px, -5px); }
+  40%{ transform: scale(1,1) translate(5px, 0px); }
+  40%{ transform: scale(1.05,1.05) translate(0px, 5px); }
+  60%{ transform: scale(1,1); }
+}
+
 </style>
 <script>
     var _name = "Nincs Kettő Négy Nélkül";
@@ -63,7 +72,7 @@ img.back { z-index: 1; }
         , tabla_w:"images/nincs2back_w.jpg", tabla_h:"images/nincs2back_h.jpg"
         , music: "audio/movin-cruisin-xylo.mp3", music0: "audio/movin-crusin-cover1.mp3"
         , figure_scale: 15 // % of table-height, cc 15vh
-        , image: { imgClosed: 'images/door2a.png', imgOpen: 'images/door2b.png', imgEmpty:"data:," }
+        , image: { imgClosed: 'images/door3a.png', imgOpen: 'images/door3b.png', imgEmpty:"data:," }
         , misc: { demo1: 'd1', demo2: 'd2' }
         , modes: [
             { id:1, match:'same', n1: 2, good: 8, pairs: [3, 17, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
@@ -258,16 +267,17 @@ img.back { z-index: 1; }
     }
 
     function selectMode(n=1) {
-        //console.log(`selectMode: ${n}`);
-
-        gameData.gameModeIdx = n - 1;
-        //document.getElementById('selectModeDiv').style.display = 'none';
-        for (var i=1;i <= 5; i++ ) {
-            document.getElementById(`b${i}`).style.display = 'none';
+        if (n == 1 || cookies.finished[n-1] > 0) {
+            gameData.gameModeIdx = n - 1;
+            for (var i=1;i <= 5; i++ ) {
+                document.getElementById(`b${i}`).style.display = 'none';
+            }
+            showMode();
+            setTimeout(restartGame,  _longMs + gameUI.spinTimeMs);
+        } else {
+            document.getElementById(`b${n}`).style.animation=`closed ${_shortMs}ms ease 0s 1 normal both`;
+            setTimeout(myBlink, _shortMs, document.getElementById(`b${n}`), false )
         }
-        //restartGame();
-        showMode();
-        setTimeout(restartGame,  _longMs + gameUI.spinTimeMs);
     }
 
     function showMode() {
