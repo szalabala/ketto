@@ -14,6 +14,12 @@
 #   különféle szövegek a rossz/közepes/jó
 # Cookies
 #   a melyik szinten legjobb idő, legkevesebb fordítás
+# check game APIs
+#  - https://developer.mozilla.org/en-US/docs/Games/Introduction
+#  - firbase - https://www.youtube.com/watch?v=LlASuUK0jw0
+#  - phaser3 - https://www.youtube.com/watch?v=fEwAgKBgoJM, https://www.youtube.com/watch?v=tIaXbRzjyqk
+#  - 
+#  - 
 
 1 Bud-sax
 2 bud-iroda
