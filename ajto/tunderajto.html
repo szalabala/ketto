@@ -161,13 +161,6 @@ img.back { z-index: 1; }
         document.getElementById('selectModeDiv').style.display = 'none';
         document.getElementById('aboutDiv').style.display = 'inline';
         document.getElementById('tabla').style.display = 'none';
-        var text = document.getElementById('texta');
-        text.innerHTML = '<h1>Tünderajtó párkereső játék</h1>'
-                       + 'Egyszerű párkereső memóriajáték a Tündérmanók blablabla...<br><br>'
-                       + 'Játék terv, programozás, blablala: szalabala<br>'
-                       + 'Zene: (nincs, de talán lehetne valami tündéres háttérzene)<br>'
-                       + 'Fotók: <a href="https://www.facebook.com/istvankristof.photo/">István Kristóf Photography</a><br>'
-                       + 'Köszönet: akik segítettek<br><br>';
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getPosPcOfPicIdx(i));
@@ -870,15 +863,23 @@ display:inline-block;
         </div>
         <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
             <img src="images/door2a.png" style="position:fixed;right:20%;top:45%;max-height:25vw;max-height:25vh;animation:blink1 2s infinite" onclick="closeAbout()">
-            <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;"></p>
+            <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;">
+                <h1>Tünderajtó párkereső játék</h1>
+                Egyszerű párkereső memóriajáték a Tündérmanók blablabla...<br>
+                <br>Szerzői jogok: Szalai Balázs <a href="http://www.gnu.hu/gpl.html">GPL(hu)</a>, <a href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPL(en)</a>
+                <br>Játék terv, programozás, blablala: szalabala
+                <br>Zene: (nincs, de talán lehetne valami tündéres háttérzene)
+                <br>+ 'Fotók: <a href="https://www.facebook.com/istvankristof.photo/">István Kristóf Photography</a>
+                <br>Köszönet: akik segítettek
+            </p>
         </div>
         <cite id="status" class="big" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
         <div id='footer' style="position:absolute;float:left;left:0%;bottom:0%;width:100%;padding:0;margin:0;text-align:left;font-stretch:semi-condensed;">
-            <a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
-            <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;"><i>&copy; Copyright 2021 szalabala - grafika: TBD</i></cite>
+            <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;">&copy;</cite>
         </div>
     </div>
     <!--https://www.buymeacoffee.com/szalabala
+        <a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
         <audio id="myaudio" src="sounds/nincs2intro.m4a" autoplay loop> </audio>
     -->
 </body>

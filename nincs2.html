@@ -233,7 +233,6 @@ img.back { z-index: 1; }
 
         setTimeout(myResize, 10);  // do initial re-placement
 
-        //console.log(`ss ${cookies.finished}`)
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
             var but = document.getElementById(`b${i}`);
             but.style.display = 'initial';
@@ -267,7 +266,7 @@ img.back { z-index: 1; }
     }
 
     function selectMode(n=1) {
-        if (n == 1 || cookies.finished[n-1] > 0) {
+        if (n == 1 || cookies.finished[n-2] > 0) {
             gameData.gameModeIdx = n - 1;
             for (var i=1;i <= 5; i++ ) {
                 document.getElementById(`b${i}`).style.display = 'none';
@@ -587,10 +586,10 @@ img.back { z-index: 1; }
         // align images on the long-edge of the screen
         if (gameDesc.W > gameDesc.H) {
             return { x_pc: Math.floor( 100 / (gameData.totalPairs - 1) * Math.floor(posId / 2) ),
-                     y_pc: Math.floor( (posId % 2 == 0) ? 5 : 95),
+                     y_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
                      scale: 0.5 };
         } else {
-            return { x_pc: Math.floor( (posId % 2 == 0) ? 5 : 95),
+            return { x_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
                      y_pc: Math.floor( 100/gameData.totalPairs * Math.floor(posId / 2) ),
                      scale: 0.5 };
         }
@@ -822,8 +821,8 @@ img.back { z-index: 1; }
 
     function bakeCookie(name, value) {
         //var cookiestr = [name, '=', JSON.stringify(value), '; domain=.', window.location.host.toString(), '; path=/;'].join('');
-        //var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
-        var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};path=/;`;
+        var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
+        //var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};path=/;`;
         document.cookie = cookiestr;
     }
     function deleteCookie(name) {
