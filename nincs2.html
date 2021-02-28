@@ -35,14 +35,11 @@ p { margin:auto; padding:0;font-size:3vmin; border-radius:25%; }
 body { background-image:url("images/csempe.jpg"); overflow: hidden; }
 table, tr, td { border: none; padding:0; margin:0; text-align: center; }
 img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
-img.top { z-index: 3; }
-img.med { z-index: 2; }
-img.back { z-index: 1; }
 .modebutton { border: 5px solid teal;  border-radius:35%; padding:1%; margin:1%; text-align: center; color:blue }
 @keyframes blink1{
-  0%{ transform: scale(1,1); }
-  5%{ transform: scale(1.05,1.05); }
-  10%{ transform: scale(1,1); }
+  45%{ transform: scale(1,1); }
+  50%{ transform: scale(1.05,1.05); }
+  55%{ transform: scale(1,1); }
 }
 @keyframes blink2{
   0%{ transform: scale(1,1); }
@@ -75,8 +72,8 @@ img.back { z-index: 1; }
         , image: { imgClosed: 'images/door3a.png', imgOpen: 'images/door3b.png', imgEmpty:"data:," }
         , misc: { demo1: 'd1', demo2: 'd2' }
         , modes: [
-            { id:1, match:'same', n1: 2, good: 8, pairs: [3, 17, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
-            { id:2, match:'same', n1: 3, good: 18, pairs: [2, 4, 5, 18, 7, 9, 10, 11, 12, 13, 15, 17], name:"Zsugabubus", desc:"Nem vagyok valami nagy játékos." },
+            { id:1, match:'same', n1: 2, good: 8, pairs: [3, 19, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
+            { id:2, match:'same', n1: 3, good: 18, pairs: [2, 4, 5, 18, 7, 9, 10, 11, 12, 13, 15, 19], name:"Zsugabubus", desc:"Nem vagyok valami nagy játékos." },
             { id:3, match:'ab', n1: 3, good: 18, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ], name:"Nimfas", desc: "Itt senki sem olyan nagy szám." },
             { id:4, match:'ab', n1: 4, good: 50, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Charlie" },
             { id:5, match:'ab', n1: 4, good: 40, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"Paragulis", desc:"Golyózott volna a szemed a trükkjeitől." }
@@ -163,21 +160,18 @@ img.back { z-index: 1; }
         document.getElementById('aboutDiv').style.display = 'inline';
         document.getElementById('tabla').style.display = 'none';
         var text = document.getElementById('texta');
-        text.innerHTML = '<h1>Nincs kettő négy nélkül!</h1>'
-                       + 'Egyszerű párkereső memóriajáték Bud Spencer és Terence Hill filmek rajongói számára.<br><br>'
-                       + 'Játék terv, programozás, blablala: szalabala<br>'
-                       + 'Zene: Sélley Szabolcs<br>'
-                       + 'Köszönet: akik segítettek<br><br>';
+        text.innerHTML = ''; //<h1>Nincs kettő négy nélkül!</h1>';
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getPosPcOfPicIdx(i));
-            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-            pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(0.5, 0.5)`; // size:enlarge .. rotate:flip
+            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out, opacity ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+            pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale})`; // size:enlarge .. rotate:flip
+            pic.style.opacity = 0.6;
         }
 
         text.innerHTML += "<br>"
         for (var i = 0; i < gameDesc.modes.length; i++) {
-            text.innerHTML += `${gameDesc.modes[i].name} mód: ${cookies.finished[i]} játék`
+            text.innerHTML += `- ${gameDesc.modes[i].name} mód: ${cookies.finished[i]} játék`
             if (cookies.finished[i] && cookies.finished[i] > 0) {
                 text.innerHTML += `, legkevesebb lépés: ${cookies.bestMove[i]}, legjobb idő:${cookies.bestTime[i]}s`
             }
@@ -199,8 +193,9 @@ img.back { z-index: 1; }
             for (var i = 0; i < gameData.targetList.length; i++) {
                 var pic = document.getElementById(gameData.targetList[i].id);
                 var pos = getPosPxOfPospc(getPosPcOfPicIdx(i));
-                pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+                pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out, opacity ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
                 pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
+                pic.style.opacity = 1;
             }
         }
 
@@ -444,7 +439,7 @@ img.back { z-index: 1; }
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = getPosPxOfPospc(getEndingPosPcOf(gameData.targetList[i].posid));
             pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-            pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(0.5, 0.5)`; // size:enlarge .. rotate:flip
+            pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale})`; // size:enlarge .. rotate:flip
         }
 
         var msgArr = gameDesc.eval_bad;
@@ -478,9 +473,13 @@ img.back { z-index: 1; }
 
     function zoomOutPic(id, pos) {
         var pic = document.getElementById(id);
-        pic.classList.remove("med");
-        pic.classList.add("top");
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+        pic.style.zIndex = pos.z;
+        //console.log(`  zoomout:${JSON.stringify(pos)}`);
+        // ....... pos.z .... ???? perspective(100px) ?
+        //pic.style.webkitTransform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(${pos.scale},${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
+        //pic.style.transform=`translate(${pos.x}px, ${pos.y}px) translateZ(${pos.z}px) scale(${pos.scale},${pos.scale}) rotateX(${pos.rotX}deg) perspective(100px)`; // size:enlarge .. rotate:flip
+        //pic.style.transform=`translate(${pos.x}px, ${pos.y}px) translateZ(${pos.z}px) scale(${pos.scale},${pos.scale}) rotateX(${pos.rotX}deg) perspective(100px)`; // size:enlarge .. rotate:flip
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale},${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
         const item = gameData.targetList.find(element => element.id == id);
         setTimeout(swapPicImage, Math.floor(gameUI.spinTimeMs / 2), id, item.src);
@@ -489,15 +488,14 @@ img.back { z-index: 1; }
 
     function zoomInPic(id, pos) {
         var pic = document.getElementById(id);
-        // LOVAS
         const item = gameData.targetList.find(element => element.id == id);
         if (!pos) {
             pos = getPosPxOfPospc(getPosPcOfPic(item));
         }
 
-        //var pos = getPosPxOfPospc(getPosPcOf(item.posid));
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-        pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(1,1) rotateX(0deg)`; // size:enlarge .. rotate:flip
+        //pic.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(1,1) rotateX(0deg)`; // size:enlarge .. rotate:flip
+        pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale},${pos.scale}) rotateX(0deg)`; // size:enlarge .. rotate:flip
         if (false == gameData.isPairFound) {
             setTimeout(swapPicImage, Math.floor(gameUI.spinTimeMs / 2), id);
         }
@@ -508,19 +506,27 @@ img.back { z-index: 1; }
         var pic = document.getElementById(id);
         const item = gameData.targetList.find(element => element.id == id);
         var pos = getPosPxOfPospc(getPosPcOfPic(item));
-        pic.classList.remove("med");
-        pic.classList.add("top");
+        //console.log(`  movePic:${JSON.stringify(pos)}`);
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px)`;
+        //pic.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px)`;
         setTimeout(resetPicZindex, gameUI.spinTimeMs, id);
     }
 
-    
+
+    function setImgZ(id, z) {
+        var img = document.getElementById(id);
+        img.style.transition='';
+        img.style.zIndex = z;
+        //img.style.transform=`translateZ(${z}px))`; // size:enlarge .. rotate:flip
+    }
+
     function resetPicZindex(id) {
-        var pic = document.getElementById(id);
-        pic.classList.remove("top");
-        pic.classList.add("med");
-        pic.style.transition='';
+        setImgZ(id, 1);
+        //var pic = document.getElementById(id);
+        //pic.classList.remove("top");
+        //pic.classList.add("med");
+        //pic.style.transition='';
     }
     function resetPicTransition(id) {
         var pic = document.getElementById(id);
@@ -528,10 +534,8 @@ img.back { z-index: 1; }
     }
 
     function swapPicImage(id, imgsrc=gameUI.cardBackImg) {
-        //console.log(`swapPicImage ${id}`);
-        var pic = document.getElementById(id);
         //const item = gameData.targetList.find(element => element.id == id);
-        //addImage(gameData.targetList[i].id, gameData.targetList[i].src);
+        var pic = document.getElementById(id);
         pic.src = imgsrc;
     }
 
@@ -547,7 +551,7 @@ img.back { z-index: 1; }
 
     function getPosPcOfPic(item) { // return { xpc, ypc }s
         if (gameData.state == 'menu') {
-            return { x_pc: 50, y_pc:-50, scale: 1, rotX: 0 };
+            return { x_pc: 50, y_pc:-50, z:10, scale: 1, rotX: 0 };
         } else if (gameData.state == 'end' || gameData.state == 'about') {
             return getEndingPosPcOf(item.posid);
         } else {     // arg maybe imgId, it would be better used, to handled selectd position as well
@@ -564,13 +568,14 @@ img.back { z-index: 1; }
         return {
                 x_pc: Math.floor( ((100 - gameUI.mainAreaWidthPc) / 2) + ((posId % gameDesc.W) * (gameUI.mainAreaWidthPc) / (gameDesc.W -1))),
                 y_pc: Math.floor( ((100 - gameUI.mainAreaHeightPc) / 2) + (Math.floor(posId / gameDesc.W) * (gameUI.mainAreaHeightPc / (gameDesc.H - 1)))),
+                z: 10,
                 scale: 1,
                 rotX: 0
             };
     }
 
     function getPosPcOfSpecial(id) {
-        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, scale: 1.75, rotX: 360 };
+        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, z:10, scale: 1.75, rotX: 360 };
         if (id == "selectB") {
             pos.x_pc = 100 - pos.x_pc;  // invert X
         }
@@ -587,10 +592,12 @@ img.back { z-index: 1; }
         if (gameDesc.W > gameDesc.H) {
             return { x_pc: Math.floor( 100 / (gameData.totalPairs - 1) * Math.floor(posId / 2) ),
                      y_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
+                     z: 10,
                      scale: 0.5 };
         } else {
             return { x_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
                      y_pc: Math.floor( 100/gameData.totalPairs * Math.floor(posId / 2) ),
+                     z: 10,
                      scale: 0.5 };
         }
     }
@@ -606,6 +613,7 @@ img.back { z-index: 1; }
         return {
             x: Math.floor((cw - iw) * pos_pc.x_pc / 100),  // + gameUI.OffsetXPx
             y: Math.floor((ch - ih) * pos_pc.y_pc / 100),   // + gameUI.OffsetYPx
+            z: pos_pc.z,
             scale: pos_pc.scale,
             rotX: pos_pc.rotX
         };
@@ -618,11 +626,14 @@ img.back { z-index: 1; }
         img.id = id;
         img.src = isrc;
         img.classList.add("mozgo");
-        img.classList.add("med");
+        //img.classList.add("med");
         img.style.borderRadius = "25%";
         img.style.maxWidth = "30vw";
         img.style.maxHeight = "30vh";
         img.style.border = '2px solid white';
+        img.style.zIndex = 1; // 3d
+        //img.style.perspective = "inherit";
+        //img.style.transformStyle = "preserve-3d";
         img.onclick = function() { onClickPic(id); };
         document.getElementById('toptable').appendChild(img);
     }
@@ -869,8 +880,8 @@ display:inline-block;
 </head>
 <body onload="startOnce();" onresize="myResize();">
     <audio id="myaudio" src="sounds/nincs2intro.m4a" autoplay loop> </audio>
-    <div id="toptable" style="position:absolute;width:100%;height:100%;padding:0;">
-        <img id="tabla" class="back" src="images/nincs2back_w.jpg" style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;width:90%;height:90%;max-height:90vh;max-width:90vw;z-index:-1;object-fit:contain;object-position:center center;">
+    <div id="toptable" style="position:absolute;width:100%;height:100%;padding:0;">  <!-- 3D perspective:100px; -->
+        <img id="tabla" class="back" src="images/nincs2back_w.jpg" style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;width:90%;height:90%;max-height:90vh;max-width:90vw;border-radius:35%;z-index:-1;object-fit:contain;object-position:center center;">
         <div style="position:relative;float:right;width:90%;text-align:right;vertical-align:top;">
             <p id='volume' style="text-align:right"><img src="images/volume2a.png" style="max-height:5vmin" onclick="toggleAudio()"><img id='fullscr' src="images/fullscr2a.png" style="max-height:5vmin" onclick="toggleFullScr()">
             <br><img src="images/about.png" style="max-height:10vmin" onclick="showAbout()"></p>
@@ -879,14 +890,21 @@ display:inline-block;
             <p id="bigtext" class="xl" style="text-align:center;font-stretch:semi-condensed">Nincs kettő négy nélkül!</p><br>
             <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()"><img src="images/door_key.png" style="max-height:15vw;max-height:15vh"></button>
         </div>
-        <div id="aboutDiv" style="position:fixed;float:left;left:10%;top:25%;width:80%;padding:0;text-align:center;display:none;">
-            <button class="big modebutton" style="position:fixed;left:45%;top:45%;" onclick="closeAbout()">Vissza</button>
-            <p id="texta" class="small" style="padding:0;text-align:left;font-stretch:semi-condensed;"></p>
+        <div id="aboutDiv" class="medium" style="position:fixed;float:left;left:10%;top:20%;width:80%;padding:0;xtext-align:center;display:none;">
+            <button class="big modebutton" style="position:fixed;left:60%;top:50%;" onclick="closeAbout()">
+                <img src="images/back.jpg" style="border-radius:25%;max-height:50%;max-width:50%;animation: blink1 2000ms infinite;"></button>
+            <p id="texta" xclass="medium" style="padding:0;text-align:left;font-stretch:semi-condensed;">
+                <h3>Nincs kettő négy nélkül</h3>
+                &copy; Szerzői jogok: Szalai Balázs <a href="http://www.gnu.hu/gpl.html">GPL(hu)</a>, <a href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPL(en)</a>
+                <br>Játék terv, programozás: szalabala
+                <br>Zene: Sélley Szabolcs
+                <br>Fotók: <a href="https://www.facebook.com/istvankristof.photo/">Kristóf István</a>
+                <br>Köszönet mindenkinek, aki segített!<a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+            </p>
         </div>
         <cite id="status" class="big" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
         <div id='footer' style="position:absolute;float:left;left:0%;bottom:0%;width:100%;padding:0;margin:0;text-align:left;font-stretch:semi-condensed;">
-            <a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
-            <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;"><i>&copy; Copyright 2021 szalabala - grafika: TBD</i></cite>
+            <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;"><i>&copy; Copyright 2021 szalabala</i></cite>
         </div>
     </div>
     <!--https://www.buymeacoffee.com/szalabala
