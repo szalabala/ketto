@@ -238,7 +238,7 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
         document.getElementById(gameDesc.misc.demo1).style.display = 'none';
         document.getElementById(gameDesc.misc.demo2).style.display = 'none';
         setMsg(_name, "bigtext");
-        setStatusMsg('A Hangyás-A-Hídon bemutatja...');
+        setStatusMsg('Hangyás Bob bemutatja...');
         
         setTimeout(myResize, 10);  // do initial re-placement
         
@@ -248,7 +248,6 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
             //console.log(`sss ${i} ${cookies.finished} ${cookies.finished.length} ${cookies.finished[i-1]}`)
             if (gameData.numStart == 1) {
                 but.style.display = (i == 1) ? 'inline' : 'none';
-
             } else if (i == 1 || (cookies.finished.length >= i && cookies.finished[i-2] > 0)) {
                 but.style.display = 'inline';
                 but.disabled = false;
@@ -281,7 +280,7 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
     }
 
     function selectMode(n=1) {
-        if (n == 1 || cookies.finished[n-2] > 0) {
+        if (gameData.numStart > 1 && (n == 1 || cookies.finished[n-2] > 0)) {
             gameData.gameModeIdx = n - 1;
             for (var i=1;i <= 5; i++ ) {
                 document.getElementById(`b${i}`).style.display = 'none';
@@ -298,12 +297,15 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
         var d1 = document.getElementById(gameDesc.misc.demo1);
         var d2 = document.getElementById(gameDesc.misc.demo2);
 
+        var mode = gameDesc.modes[gameData.gameModeIdx];
+        var num = mode.pairs[Math.floor(Math.random() * mode.pairs.length)];
+
         setStatusMsg(gameDesc.messages.showMode);
-        d1.src = 'images/1a.jpg';
+        d1.src = `images/${num}a.jpg`;
         if (gameDesc.modes[gameData.gameModeIdx].match == 'same') {
-            d2.src = 'images/1a.jpg';
+            d2.src = `images/${num}a.jpg`;
         } else {
-            d2.src = 'images/1b.jpg';
+            d2.src = `images/${num}b.jpg`;
         }
         d1.style.display='inline';
         d2.style.display='inline';
@@ -467,6 +469,27 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
         myUpdateStat(cookies.bestTime, gameData.gameModeIdx, Math.floor((gameData.endTime - gameData.startTime)/1000));
         storeCookies();
     }
+    function playClosing() {
+        gameData.state = "closing";
+        gameData.selectA = 0;
+        gameData.selectB = 0;
+        for (var i = 0; i < gameData.targetList.length; i++) {
+            var pic = document.getElementById(gameData.targetList[i].id);
+            var pos = getPosPxOfPospc(getEndingPosPcOf(gameData.targetList[i].posid)); // i vs gameData.targetList[i].posid
+            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+            pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale})`; // size:enlarge .. rotate:flip
+        }
+        
+        document.getElementById('selectModeDiv').style.top = '30%';
+        setMsg(getClosingMsg(), "bigtext");
+        document.getElementById('restartbutton').style.display = 'inline';
+        
+        cookies.finished[gameData.gameModeIdx] += 1;
+        myUpdateStat(cookies.bestMove, gameData.gameModeIdx, gameData.attempts);
+        myUpdateStat(cookies.bestTime, gameData.gameModeIdx, Math.floor((gameData.endTime - gameData.startTime)/1000));
+        storeCookies();
+    }
+
     function getClosingMsg() {
         var msgArr = gameDesc.eval_bad;
         if (cookies.finished[gameDesc.modes.length - 1] > 0) {
@@ -616,13 +639,13 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
             return { x_pc: Math.floor( Math.floor(posId / 2) * 100 / (gameData.totalPairs - 1) ),
                      y_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
                      z: 10,
-                     scale: 0.5,
+                     scale: 0.4,
                      rotX: 0 };
         } else {
             return { x_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
                      y_pc: Math.floor( Math.floor(posId / 2) * 100/ (gameData.totalPairs - 1) ),
                      z: 10,
-                     scale: 0.5,
+                     scale: 0.4,
                      rotX: 0 };
         }
     }
@@ -751,7 +774,7 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
             img.style.maxHeight = gameUI.cache.imgSizePx + 'px';
             img.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pospc.scale}, ${pospc.scale}) rotateX(${pospc.rotX}deg)`; // size:enlarge .. rotate:flip
             //  rotateX(${pospc.rotX}deg)
-            console.log(`  res ${i} ${JSON.stringify(pospc)} =&gt; ${JSON.stringify(pos)}` );
+            //console.log(`  res ${i} ${JSON.stringify(pospc)} =&gt; ${JSON.stringify(pos)}` );
         }
     }
     function setStyle(elem,styleitem,value) {
@@ -860,7 +883,7 @@ img.mozgo { position: absolute; left: 0px; top: 0px; display:inline-block;}
 
     function bakeCookie(name, value) {
         //var cookiestr = [name, '=', JSON.stringify(value), '; domain=.', window.location.host.toString(), '; path=/;'].join('');
-        var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
+        var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${365*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
         //var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};path=/;`;
         document.cookie = cookiestr;
     }
@@ -921,12 +944,14 @@ display:inline-block;
         <div id="aboutDiv" class="medium" style="position:fixed;float:left;left:10%;top:20%;width:80%;padding:0;xtext-align:center;display:none;">
             <button class="big modebutton" style="position:fixed;left:60%;top:50%;" onclick="closeAbout()">
                 <img src="images/back.jpg" style="border-radius:25%;max-height:50%;max-width:50%;animation: blink1 2000ms infinite;"></button>
-            <p id="texta" xclass="medium" style="padding:0;text-align:left;font-stretch:semi-condensed;">
+            <p id="texta" class="medium" style="padding:0;text-align:left;font-stretch:semi-condensed;">
                 <h3>Nincs kettő négy nélkül</h3>
-                &copy; Szerzői jogok: Szalai Balázs <a href="http://www.gnu.hu/gpl.html">GPL(hu)</a>, <a href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPL(en)</a>
-                <br>Játék terv, programozás: szalabala
+                &copy; Szalai Balázs <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="images/bmc-logo-no-background.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 60px !important;" ></a>, GPL <a href="http://www.gnu.hu/gpl.html">hu</a>/<a href="http://www.gnu.org/licenses/gpl-3.0.en.html">en</a>
+                <br>Grafika: a filmek mindenkori jogtulajdonosa
                 <br>Zene: Sélley Szabolcs
                 <br>Köszönet mindenkinek, aki segített!<a style="position:absolute;float:left;bottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+            </p><p class="small">
+                <br><a href="terms.html" target="_blank">Használati feltételek</a>, <a href="cookies.html" target="_blank">Websütik/Cookies</a>
             </p>
         </div>
         <cite id="status" class="big" style="position:absolute;float:left;top:0%;text-align:left;"></cite>
@@ -934,8 +959,13 @@ display:inline-block;
             <cite id="credit" class="medium" style="position:absolute;float:right;right:0%;bottom:0%;padding:0;margin:0;text-align:right;"><i>&copy; Copyright 2021 szalabala</i></cite>
         </div>
     </div>
-    <!--https://www.buymeacoffee.com/szalabala
-            <button class="big modebutton" style="position:fixed;left:48%;top:48%;" onclick="closeAbout()">Vissza</button>
+    <!--https://www.buymeacoffee.com/szalabala   images/bmc-logo-no-background.png
+        <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+        <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+        <a style="position:absolute;float:left;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+        <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="szalabala" data-color="#FFDD00" data-emoji=""  data-font="Cookie" data-text="" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
+
+        <button class="big modebutton" style="position:fixed;left:48%;top:48%;" onclick="closeAbout()">Vissza</button>
          style="float:left;border:1px solid black"
         <p id="status" class="medium" style="position:fixed;float:left;left:0%;bottom:0%;width:50%;padding:0;text-align:left;font-stretch:semi-condensed;"><a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img style="max-height:5vh" src="images/buymeacoffee.png"></a></p>
         <img id="tabla" class="back" src="data:," style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;max-height:99vh;max-width:99vw;z-index:-1;object-fit:contain;object-position:center center;">
