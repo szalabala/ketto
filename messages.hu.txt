@@ -1,0 +1,17 @@
+"Fantasztikus! Egyszerűen hihetetlen.", 
+"Ilyet a fecskék is csak akkor csinálnak, ha jó formában vannak.",
+"Az ajtók azért vannak, hogy bemenjünk rajtuk, nem tudtad?", 
+"Hogy is mondjam, csak ez... olyan... mint... nem találok rá jelzőt.",
+"Önök uraim egy rendkívül alapos nyomozói munka eredményei.", 
+"Tudod mit? Furfangos egy furkó vagy te!",
+"Te mondtad Főnök, olyan a szemem, mint a sasé!",
+"Egyet is nehéz találni, na de kettőt. És ilyen rövid idő alatt?"],
+
+"A te tudatalattid különleges tipikussággal jelentkezik.", 
+"Elnézést a késésért, nem találták a cella kukcsát.", 
+"Attól tartok ezt a számot nem ismerem.", 
+"Kábító! Valóban az.", 
+"A kábítót ágy értettem elképesztő.",
+"Önök a mi szervezetünk remekművei.", 
+"Úgy marad majd meg, mint ey zárójelbe tett bolonds-g, amit soha senki nem fog tudni megmagyarázni.",
+"Plátói? Mi a fenét jelent az, hogy plátói?"]

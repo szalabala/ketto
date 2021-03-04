@@ -1,19 +1,19 @@
 ﻿// Copyright 2021
 // Szalai Balázs szalabala@gmail.com
-// HHSWGM: Hangyas a Hidon Simple Web Game Module
+// HBWEGA: Hangyas Bob WEb GAme
 // description: TBD
 
-var _hhswgm_version = '0.1';
+var _hbwega_version = '0.1';
         
-var hhstat = {
+var hbwega = {
     extendArray: function(arr, len, val) {
-        while (arr.length <= len) {
+        while (arr.length < len) {
             arr.push(val);
         }
     },
 
     updateStatMin: function (arr, idx, val) {
-        myExtendArray(arr, idx, 0);
+        this.extendArray(arr, idx, 0);
         if (arr[idx] == 0) {
             arr[idx] = val;
         } else {
@@ -23,7 +23,7 @@ var hhstat = {
     },
 
     updateStatMax: function (arr, idx, val) {
-        myExtendArray(arr, idx, 0);
+        this.extendArray(arr, idx, 0);
         if (arr[idx] == 0) {
             arr[idx] = val;
         } else {
@@ -33,11 +33,11 @@ var hhstat = {
     }
 }
 
-var hhgui = {
+var hbgui = {
     W: 1,
     H: 1,
     fullscr: 0,
-    muted: false,
+    muted: true,
     _shortMs: 500,
     _longMs: 1500,
     mainAreaWidthPc: 80,
@@ -54,8 +54,7 @@ var hhgui = {
 
     zoomOutPic: function(id, pos) {
         var pic = document.getElementById(id);
-        pic.classList.remove("med");
-        pic.classList.add("top");
+        pic.style.zIndex = pos.z;
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale},${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
         const item = gameData.targetList.find(element => element.id == id);
@@ -65,42 +64,47 @@ var hhgui = {
     
     zoomInPic: function(id, pos) {
         var pic = document.getElementById(id);
-        // LOVAS
         const item = gameData.targetList.find(element => element.id == id);
         if (!pos) {
             pos = this.getPosPxOfPospc(this.getPosPcOfPic(item));
         }
-        
-        //var pos = getPosPxOfPospc(getPosPcOf(item.posid));
+
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(1,1) rotateX(0deg)`; // size:enlarge .. rotate:flip
+        //pic.style.transform=`translate3d(${pos.x}px, ${pos.y}px, ${pos.z}px) scale(1,1) rotateX(0deg)`; // size:enlarge .. rotate:flip
         if (false == gameData.isPairFound) {
             setTimeout(this.swapPicImage, Math.floor(gameUI.spinTimeMs / 2), id);
         }
-        setTimeout(this.resetPicZindex, gameUI.spinTimeMs, id);
+        setTimeout(this.resetPicZindex, gameUI.spinTimeMs, id, this);
     },
     
     moveHomePic: function(id) {
         var pic = document.getElementById(id);
         const item = gameData.targetList.find(element => element.id == id);
         var pos = this.getPosPxOfPospc(this.getPosPcOfPic(item));
-        pic.classList.remove("med");
-        pic.classList.add("top");
         pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
         pic.style.transform=`translate(${pos.x}px, ${pos.y}px)`;
-        setTimeout(this.resetPicZindex, gameUI.spinTimeMs, id);
+        setTimeout(this.resetPicZindex, gameUI.spinTimeMs, id, this);
     },
     
-    
-    resetPicZindex: function(id) {
-        var pic = document.getElementById(id);
-        pic.classList.remove("top");
-        pic.classList.add("med");
-        pic.style.transition='';
+    setImgZ: function(id, z) {
+        var img = document.getElementById(id);
+        //img.style.transition='';
+        img.style.transitionDuration = 0; // instant
+        img.style.zIndex = z;
+        //img.style.transform=`translateZ(${z}px))`; // size:enlarge .. rotate:flip
     },
+    
+    resetPicZindex: function(id, obj) {
+        obj.setImgZ(id, 1);
+        //var pic = document.getElementById(id);
+        //pic.style.transition='';
+    },
+
     resetPicTransition: function(id) {
         var pic = document.getElementById(id);
         pic.style.transition='';
+        //pic.style.transitionDuration = 0; // instant
     },
     
     swapPicImage: function (id, imgsrc=gameUI.cardBackImg) {
@@ -108,20 +112,20 @@ var hhgui = {
         pic.src = imgsrc;
     },
     
-    getPosPcOfPicId: function(id) {     // return { xpc, ypc }s
+    getPosPcOfPicId: function(id) {        // return { xpc, ypc }
         const item = gameData.targetList.find(element => element.id == id);
         return this.getPosPcOfPic(item);
     },
     
-    getPosPcOfPicIdx: function(idx) {   // return { xpc, ypc }s
+    getPosPcOfPicIdx: function(idx) {      // return { xpc, ypc }s
         const item = gameData.targetList[idx]; //.find(element => element.id == gameData.selectA);
         return this.getPosPcOfPic(item);
     },
     
-    getPosPcOfPic: function(item) { // return { x_pc, y_pc }s
+    getPosPcOfPic: function(item) {          // return { x_pc, y_pc }
         if (gameData.state == 'menu') {
             return { x_pc: 50, y_pc:-50, scale: 1, rotX: 0 };
-        } else if (gameData.state == 'end' || gameData.state == 'about') {
+        } else if (gameData.state == 'end' || gameData.state == 'about' || gameData.state == 'closing') {
             return this.getEndingPosPcOf(item.posid);
         } else {     // arg maybe imgId, it would be better used, to handled selectd position as well
             if (gameData.selectA == item.id) {
@@ -137,13 +141,14 @@ var hhgui = {
         return {
             x_pc: Math.floor( ((100 - gameUI.mainAreaWidthPc) / 2) + ((posId % gameDesc.W) * (gameUI.mainAreaWidthPc) / (gameDesc.W -1))),
             y_pc: Math.floor( ((100 - gameUI.mainAreaHeightPc) / 2) + (Math.floor(posId / gameDesc.W) * (gameUI.mainAreaHeightPc / (gameDesc.H - 1)))),
+            z: 10,
             scale: 1,
             rotX: 0
         };
     },
 
     getPosPcOfSpecial: function (id) {
-        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, scale: 1.75, rotX: 360 };
+        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, z:10, scale: 1.75, rotX: 360 };
         if (id == "selectB") {
             pos.x_pc = 100 - pos.x_pc;  // invert X
         }
@@ -158,14 +163,18 @@ var hhgui = {
     getEndingPosPcOf: function (posId) {                // return { x_pc, y_pc } -- 'parking positions'
         // align images on the long-edge of the screen
         if (gameDesc.W > gameDesc.H) {
-            return { x_pc: Math.floor( 100 / (gameData.totalPairs - 1) * Math.floor(posId / 2) ),
-                y_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
-                scale: 0.5 };
+            return { x_pc: Math.floor( Math.floor(posId / 2) * 100 / (gameData.totalPairs - 1) ),
+                     y_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
+                     z: 10,
+                     scale: 0.4,
+                     rotX: 0 };
         } else {
             return { x_pc: Math.floor( (posId % 2 == 0) ? 2 : 98),
-                    y_pc: Math.floor( 100/gameData.totalPairs * Math.floor(posId / 2) ),
-                    scale: 0.5 };
-        }
+                     y_pc: Math.floor( Math.floor(posId / 2) * 100 / (gameData.totalPairs - 1) ),
+                     z: 10,
+                     scale: 0.4,
+                     rotX: 0 };
+       }
     },
         
     getPosPxOfPospc: function( pos_pc, img=null ) {     // { xpc, ypc }
@@ -178,6 +187,7 @@ var hhgui = {
         return {
             x: Math.floor((cw - iw) * pos_pc.x_pc / 100),  // + gameUI.OffsetXPx
             y: Math.floor((ch - ih) * pos_pc.y_pc / 100),   // + gameUI.OffsetYPx
+            z: pos_pc.z,
             scale: pos_pc.scale,
             rotX: pos_pc.rotX
         };
@@ -209,13 +219,13 @@ var hhgui = {
             gameDesc.W = mode.n1 * 2;
             gameDesc.H = mode.n1;
             if (!isBeforeLandscape) {
-                document.getElementById('tabla').src = gameDesc.tabla_w;
+                document.getElementById('tabla').src = gameDesc.images.tabla_w;
             }
         } else {
             gameDesc.W = mode.n1;
             gameDesc.H = mode.n1 * 2; 
             if (isBeforeLandscape) {
-                document.getElementById('tabla').src = gameDesc.tabla_h;
+                document.getElementById('tabla').src = gameDesc.images.tabla_h;
             }
         }
         
@@ -226,15 +236,15 @@ var hhgui = {
         var tw = Math.floor(cw * gameUI.mainAreaWidthPercent / 100);
         var th = Math.floor(ch * gameUI.mainAreaHeightPercent / 100);
         var th0= Math.floor(tw / r0);
-        var posCenter = hhgui.getPosPxOfPospc( {x_pc:50, y_pc:50}, backimg );
+        var posCenter = hbgui.getPosPxOfPospc( {x_pc:50, y_pc:50}, backimg );
         backimg.style.transform =`translate(${posCenter.x}px, ${posCenter.y}px)`;
         
         //var img_w = Math.floor( (cw * 80) / gameDesc.W / 100 );
         var img_maxw = Math.floor((cw * gameUI.mainAreaWidthPc / 100) / gameDesc.W);
         var img_maxh = Math.floor((ch * gameUI.mainAreaHeightPc / 100) / gameDesc.H);
         gameUI.cache.imgSizePx = Math.min(
-        Math.floor( (cw * gameUI.mainAreaWidthPc / 100) / gameDesc.W ),
-        Math.floor( (ch * gameUI.mainAreaHeightPc / 100) / gameDesc.H )
+            Math.floor( (cw * gameUI.mainAreaWidthPc / 100) / gameDesc.W ),
+            Math.floor( (ch * gameUI.mainAreaHeightPc / 100) / gameDesc.H )
         );
         gameUI.cache.offsetXPx = Math.floor( (cw * (100-gameUI.mainAreaWidthPc) / 100) / 2 );
         gameUI.cache.offsetYPx = Math.floor( (ch * (100-gameUI.mainAreaHeightPc) / 100) / 2 );
@@ -242,8 +252,8 @@ var hhgui = {
         var N = gameDesc.W * gameDesc.H;   //number of images to match
         for (var i = 0; i < gameData.targetList.length; i++) {
             //console.log(` r ${i} ${gameData.targetList[i].id}`)
-            var pospc = hhgui.getPosPcOfPicIdx(i);
-            var pos = hhgui.getPosPxOfPospc(pospc);
+            var pospc = hbgui.getPosPcOfPicIdx(i);
+            var pos = hbgui.getPosPxOfPospc(pospc);
             
             var img = document.getElementById(gameData.targetList[i].id);
             img.style.transition=''; // instant
@@ -266,7 +276,7 @@ var hhgui = {
     },
     myBlink: function (elem, isSet=true) {
         if (isSet) {
-            elem.style.animation=`blink1 ${2 * hhgui._longMs}ms infinite`;
+            elem.style.animation=`blink1 ${2 * hbgui._longMs}ms infinite`;
         } else {
             elem.style.removeProperty('animation');
         }
@@ -304,17 +314,21 @@ var hhgui = {
             gameUI.fullscr = 0;    
             document.getElementById("fullscr").src = "images/fullscr2a.png";
         }
-        myResize();
+        hbgui.myResize();
         //setTimeout(function(){window.scrollTo(0, 0); }, 5);
     },
     
     toggleAudio: function () {
-        if (gameUI.muted == false) {
-            gameUI.muted = true;
+        console.log(` toggleAudio.. muted:${hbgui.muted}`);
+
+        if (hbgui.muted == false) {
+            hbgui.muted = true;
             document.getElementById('myaudio').pause();
+            document.getElementById('bvol').src = "images/volume2b.png";
         } else {
-            gameUI.muted = false;
+            hbgui.muted = false;
             document.getElementById('myaudio').play();
+            document.getElementById('bvol').src = "images/volume2a.png";
         }
     },
     
@@ -327,7 +341,7 @@ var hhgui = {
     }
 }
     
-var hhcookies = {
+var hbcookies = {
     bake: function(name, value) {
         //var cookiestr = [name, '=', JSON.stringify(value), '; domain=.', window.location.host.toString(), '; path=/;'].join('');
         var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
