@@ -342,14 +342,17 @@ var hbgui = {
 }
     
 var hbcookies = {
+    cookieRoot: '',
+    cookieDomain: '',   // window.location.host.toString()
     bake: function(name, value) {
         //var cookiestr = [name, '=', JSON.stringify(value), '; domain=.', window.location.host.toString(), '; path=/;'].join('');
-        var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${window.location.host.toString()}.com:; path=/;`;
+        var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};domain=.${this.cookieDomain}.com:; path=/${this.cookieRoot};`;
         //var cookiestr = `${name}=${encodeURIComponent(JSON.stringify(value))};max-age=${1000*24*60*60*1000};path=/;`;
+        console.log(`bake ${cookiestr}`)
         document.cookie = cookiestr;
     },
     delete: function(name) {
-        var cookiestr = `${name}=;max-age=0;path=/;`;
+        var cookiestr = `${name}=;max-age=0;path=/${this.cookieRoot};`;
         document.cookie = cookiestr;
     },
     
@@ -371,9 +374,9 @@ var hbcookies = {
         return result;
     },
     set: function(name, value) {
-        var cookiestr = `${name}=${encodeURIComponent(value)};max-age=${1000*24*60*60*1000};path=/`; //;path=/lovas12/nincs2
+        var cookiestr = `${name}=${encodeURIComponent(value)};max-age=${1000*24*60*60*1000};path=/${this.cookieRoot}`; //;path=/lovas12/nincs2
         console.log(` set cookie ${cookiestr}`);
-        document.cookie = cookiestr; //;path=/lovas12/nincs2
+        document.cookie = cookiestr;
     },
     get: function(name) {
         var cookieArr = document.cookie.split(";");
