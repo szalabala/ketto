@@ -19,10 +19,7 @@
     gameDesc.images = { 
         tabla_w:"images/nincs2back_w.jpg", tabla_h:"images/nincs2back_h.jpg",
         doorClosed: 'images/door3a.png', doorOpen: 'images/door3b.png', 
-        cardBackImg: "images/back.jpg",
-        imgEmpty:"data:,",
-        path:"images",
-        prefix:"" };
+        imgEmpty:"data:," };
     //gameDesc.misc: { demo1: 'd1', demo2: 'd2' }
     gameDesc.modes = [
         { id:1, match:'aa', n1: 2, good: 8, pairs: [3, 19, 7, 9, 13, 15], name:"Bugsy", desc:"Tudod mi vagy Bugsy?" },
@@ -46,14 +43,13 @@
                 "Vigyetek egyenesen a repülőtérre, és ha a gép felszállt, gyertek vissza értünk ide és vigyetek haza.",
                 "Most, hogy elmeséltem az életem történetét, menj és sétálj egyet." ]
     };
-    //hbcookies.cookieRoot = 'nincs2';
-    //hbcookies.cookieDomain = 'hangyasbob';
+    hbcookies.cookieRoot = 'nincs2';
+    hbcookies.cookieDomain = 'hangyasbob';
   </script>
 </head>
 <body onload="startOnce();" onresize="hbgui.myResize();">
     <audio id="myaudio" src="sounds/nincs2intro.m4a" loop> </audio>   <!-- autoplay -->
     <div id="toptable" style="position:absolute;width:100%;height:100%;padding:0;">  <!-- 3D perspective:100px; -->
-        <div id="cardscontainer"></div>  <!--  style="position:absolute;width:100%;height:100%;padding:0;" -->
         <img id="tabla" class="back" src="images/nincs2back_w.jpg" style="position:absolute;float:left;left:0;padding:0;text-align:center;vertical-align:top;width:90%;height:90%;max-height:90vh;max-width:90vw;border-radius:35%;z-index:-1;object-fit:contain;object-position:center center;">
         <div style="position:relative;float:right;width:90%;text-align:right;vertical-align:top;">
             <p id='volume' style="text-align:right"><img id="bvol" src="images/volume2b.png" style="max-height:5vmin;margin:1vmin" onclick="hbgui.toggleAudio()"><img id='fullscr' src="images/fullscr2a.png" style="max-height:5vmin;margin:1vmin" onclick="hbgui.toggleFullScr()">
@@ -64,16 +60,16 @@
             <button id="restartbutton" class="xl modebutton" style="left:42%;border-color:blue;" onclick="start()"><img src="images/door_key.png" style="max-width:15vw;max-height:15vh"></button>
         </div>
         <div id="aboutDiv" class="medium" style="position:fixed;float:left;left:10%;top:20%;width:80%;padding:0;xtext-align:center;display:none;">
-            <button id="btnAbout" class="big modebutton" style="position:fixed;left:60%;top:50%;" onclick="closeAbout()">
-                <img id="btnAboutImg" src="data:," style="border-radius:25%;max-height:50%;max-width:50%;animation: blink1 2000ms infinite;"></button>
+            <button class="big modebutton" style="position:fixed;left:60%;top:50%;" onclick="closeAbout()">
+                <img src="images/back.jpg" style="border-radius:25%;max-height:50%;max-width:50%;animation: blink1 2000ms infinite;"></button>
             <p id="texta" class="medium" style="padding:0;text-align:left;font-stretch:semi-condensed;line-height:1em;">
                 <h3>Nincs kettő négy nélkül</h3>
                 Játék: Szalai Balázs <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="images/bmc-logo-no-background.png" alt="Buy Me A Coffee" style="max-height:1em;vertical-align:bottom;" ></a>, <a rel="license" href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPL v3</a>/<a href="http://www.gnu.hu/gpl.html">hu</a>
                 <br>Grafika: a filmek mindenkori jogtulajdonosa
                 <br>Zene: Sélley Szabolcs
                 <br>Engine: &copy; Szalai Balázs <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="images/bmc-logo-no-background.png" alt="Buy Me A Coffee" style="max-height: 1em;vertical-align:bottom;" ></a>, <a rel="license" href="http://www.gnu.org/licenses/gpl-3.0.en.html">GPL v3</a>/<a href="http://www.gnu.hu/gpl.html">hu</a>
-            </p>
-            <p class="small">
+                <br>Köszönet mindenkinek, aki segített!<a style="position:absolute;float:left;xbottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+            </p><p class="small">
                 <br><a href="terms.html" target="_blank">Használati feltételek</a>, <a href="cookies.html" target="_blank">Websütik/Cookies</a>
             </p>
         </div>
@@ -85,7 +81,6 @@
     <!-- if you create your a game using this HBWEGA engine, please keep the referene visible in the about with copyright info as below:
         Engine: &copy; Szalai Balázs <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="images/bmc-logo-no-background.png" alt="Buy Me A Coffee" style="max-height: 1em;vertical-align:bottom;" ></a>, GPL <a href="http://www.gnu.hu/gpl.html">hu</a>/<a href="http://www.gnu.org/licenses/gpl-3.0.en.html">en</a>
         https://www.buymeacoffee.com/szalabala   images/bmc-logo-no-background.png
-        <br>Köszönet mindenkinek, aki segített!<a style="position:absolute;float:left;xbottom:0%;" href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=szalabala&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
     -->
 </body>
 </html>

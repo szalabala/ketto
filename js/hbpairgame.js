@@ -13,13 +13,15 @@
 //        , start_message: "<span style=\"color:blue;text-decoration:blink;\">" + "lovas" + "</span>"
 //        , restart_message: "<span style=\"color:blue;text-decoration:blink;\">Kattints a Puffinra az újrakezdéshez</span>"
 //        , tabla: "kincsaminincs-terkep1000d.jpg", tabla0: "images/nincs2header_46d.jpg", tabla_end: "ending.jpg"
-//        , tabla_w:"images/nincs2back_w.jpg", tabla_h:"images/nincs2back_h.jpg"
+//        , tabla_w:"", tabla_h:""
 //        , music: "audio/movin-cruisin-xylo.mp3", music0: "audio/movin-crusin-cover1.mp3"
         , figure_scale: 15 // % of table-height, cc 15vh
-        , image: { doorClosed: 'images/door3a.png', doorOpen: 'images/door3b.png', empty:"data:," }
+        , images: { doorClosed: 'images/door3a.png', doorOpen: 'images/door3b.png', empty:"data:,", 
+            tabla_w:"", tabla_h:"",
+            path:"images", prefix: "" }
         , misc: { demo1: 'd1', demo2: 'd2' }
         , modes: [
-            { id:1, match:'same', n1: 2, good: 8, pairs: [1, 2, 3, 4], name:"leve 1" },
+            { id:1, match:'-', n1: 2, good: 8, pairs: [1, 2, 3, 4], name:"leve 1" },
             { id:2, match:'ab', n1: 3, good: 18, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9 ], name:"level 2" },
             { id:3, match:'ab', n1: 4, good: 50, pairs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], name:"level 3" },
         ]
@@ -51,15 +53,45 @@
         started: [],     // games started
         finished: [],
         bestMove: [],   // array of best moves per difficulty level
-        bestTime: []
+        bestTime: [],
+        music: "on"
     };
     var gameUI = {
         mainAreaWidthPc: 80, mainAreaHeightPc: 90, // figureSizePc: 10,
+        zoomedPosPc: 35, //spinTimeMs:hbgui._shortMs, spinDeg:360,
         cardBackImg: "images/back.jpg",
         zoomedPosPc: 25, spinTimeMs:hbgui._shortMs, spinDeg:360,
         fullscr: 0, muted: false,
         cache: { imgSizePx: 100, offsetXPx:1, offsetYPx:1 }
     };
+
+    hbgui.getPosPcOfSpecial = function (id) {
+        // default is defined for landscape position, rotate later if 'vertical'
+        var pos = { x_pc:gameUI.zoomedPosPc, y_pc:50, z:10, scale: hbgui.zoomOutScale, rotX: hbgui.spinDeg };
+        var isSwapXyIfPortrait = true;
+        if (id == "selectA") { // || id == gameData.selectA) {
+            ;
+        } else  if (id == "selectB") { //} || id == gameData.selectB ) {
+            pos.x_pc = 100 - pos.x_pc;  // invert X
+        } else  if (id == "demoA") { //} || id == gameData.selectB ) {
+            pos = { x_pc:30, y_pc:-2, z:10, scale: 0.7, rotX: hbgui.spinDeg };
+            isSwapXyIfPortrait = false;
+        } else  if (id == "demoB") { //} || id == gameData.selectB ) {
+            pos = { x_pc:70, y_pc:-2, z:10, scale: 0.7, rotX: hbgui.spinDeg };
+            isSwapXyIfPortrait = false;
+        } else {
+            var pos = hbgui.getPosPcOfPosId(id);
+            pos.rotX = hbgui.spinDeg;
+            pos.scale = hbgui.zoomOutScale;
+        }
+
+        if (gameDesc.W < gameDesc.H && isSwapXyIfPortrait) {  // rotate 90, aka swap x - y
+            const tmp = pos.x_pc;
+            pos.x_pc = pos.y_pc;
+            pos.y_pc = tmp;
+        }
+        return pos;
+    }
 
     function myLoad() {
         const queryString = window.location.search;
@@ -69,13 +101,13 @@
 
             const urlParams = new URLSearchParams(queryString);
             if (urlParams.has('fast')) {
-                _longMs = 100;
-                _shortMs = 50;
-                gameUI.spinTimeMs = 50;
+                hbgui._longMs = 200;
+                hbgui._shortMs = 100;
+                hbgui.spinTimeMs = 100;
             }
 
             if (urlParams.has('frameMs')) {
-                frameMs = parseInt(urlParams.get('frameMs'))
+                hbgui.frameMs = parseInt(urlParams.get('frameMs'))
             }
             if (urlParams.has('lvl')) {
                 var lvl = parseInt(urlParams.get('lvl'));
@@ -88,19 +120,36 @@
     }
 
     function startOnce() {
-        console.log(` startOnce..`);
+        console.log(` startOnce.. modes.len:${gameDesc.modes.length}`);
+        //if ()
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
             addImgButton(i, 'selectModeDiv', i, '');
         }
-        addImage(gameDesc.misc.demo1, gameDesc.image.imgEmpty);
-        addImage(gameDesc.misc.demo2, gameDesc.image.imgEmpty);
+        addCard(gameDesc.misc.demo1, gameDesc.images.cardBackImg, 'toptable'); // images.imgEmpty
+        addCard(gameDesc.misc.demo2, gameDesc.images.cardBackImg, 'toptable');
         document.getElementById(gameDesc.misc.demo1).style.display = 'none';
         document.getElementById(gameDesc.misc.demo2).style.display = 'none';
-        document.getElementById('tabla').style.filter = 'invert(25%)';
-        document.getElementById('myaudio').volume = 0.2;
+
+        if (gameDesc.images.tabla_w) {
+            document.getElementById('tabla').src = gameDesc.images.tabla_w;
+            document.getElementById('tabla').style.filter = 'invert(25%)';
+        }
+        if (document.getElementById('myaudio')) {
+            document.getElementById('myaudio').volume = 0.2;
+        }
+        document.getElementById('btnAboutImg').src = gameDesc.images.cardBackImg;
         restoreCookies();
         myLoad();
-        start();
+        setTimeout(hbgui.myResize, 10);  // do initial re-placement
+        if (typeof startOnce2 === 'function') {
+            startOnce2();
+        }
+        if (gameDesc.modes.length == 1) {
+            document.getElementById('selectModeDiv').style.display = 'none';
+            setTimeout(selectMode, 20, 1);   // .. after initial resize completed
+        } else {
+            start();
+        }
     }
     
     function start() {
@@ -112,7 +161,7 @@
         
         if (gameData.numStart > 1) {
             document.getElementById('restartbutton').style.display = 'none';
-            if (gameData.numStart == 2) {
+            if (gameData.numStart == 2 && cookies.music != "off") {
                 hbgui.toggleAudio();
             }
         }
@@ -124,16 +173,16 @@
         setTimeout(hbgui.myResize, 10);  // do initial re-placement
         
         for (var i=1;i <= gameDesc.modes.length; i++ ) {
-            //console.log(` start.. ${JSON.stringify(gameDesc.modes[i-1])}`);
+            console.log(` start.. ${JSON.stringify(gameDesc.modes[i-1])} i:${i} b:${cookies.finished.length >= i && cookies.finished[i-1] > 0}`);
             var but = document.getElementById(`b${i}`);
             but.style.display = 'initial';
-            console.log(`sss ${i} ${cookies.finished} ${cookies.finished.length} ${cookies.finished[i-1]}`)
+            console.log(`sss level:${i} fin:${cookies.finished} f.len:${cookies.finished.length} f.i-1:${cookies.finished[i-1]}`)
             if (gameData.numStart == 1) {
                 but.style.display = (i == 1) ? 'inline' : 'none';
-            } else if (i == 1 || (cookies.finished.length >= i && cookies.finished[i-2] > 0)) {
+            } else if (i == 1 || (cookies.finished.length >= i && cookies.finished[i-2] > 0)) {  // idx:(i-1)-1
                 but.style.display = 'inline';
                 but.disabled = false;
-                but.src = gameDesc.image.doorOpen;
+                but.src = gameDesc.images.doorOpen;
                 hbgui.myBlink(but,false);
                 setTimeout(hbgui.myBlink, i * Math.floor(hbgui._longMs/8) + 5, but);
             } else {
@@ -162,15 +211,17 @@
     }
 
     function selectMode(n=1) {
-        console.log(` selectMode.. n:${gameData.gameModeIdx} ${gameData.numStart} ${n} ${n} `);
+        console.log(` selectMode.. n:${n} idx:${gameData.gameModeIdx} ${gameData.numStart}  start:${JSON.stringify(cookies.finished)} `);
+        //console.log(` selectMode.. n:${gameData.gameModeIdx} ${gameData.numStart} ${n} ${n} `);
 
-        if (gameData.numStart > 1 && (n == 1 || cookies.finished[n-2] > 0)) {
+        //if (gameData.numStart > 1 && (n == 1 || cookies.finished[n-2] > 0)) {
+        if (n == 1 || cookies.finished[n-2] > 0) {
             gameData.gameModeIdx = n - 1;
-            for (var i=1;i <= 5; i++ ) {
+            for (var i=1;i <= gameDesc.modes-length; i++ ) {
                 document.getElementById(`b${i}`).style.display = 'none';
             }
             showSelectedMode(gameData.gameModeIdx);
-            setTimeout(restartGame,  _longMs + gameUI.spinTimeMs);
+            setTimeout(restartGame,  hbgui._longMs + hbgui.spinTimeMs);
         } else {
             document.getElementById(`b${n}`).style.animation=`closed ${_shortMs}ms ease 0s 1 normal both`;
             setTimeout(hbgui.myBlink, _shortMs, document.getElementById(`b${n}`), false )
@@ -178,7 +229,7 @@
     }
 
     function showSelectedMode(n) {
-        console.log(` showSelectMode.. n:${n} ${gameDesc.modes[gameData.gameModeIdx].match} ${n} ${n} `);
+        //console.log(` showSelectMode.. n:${n} ${gameDesc.modes[gameData.gameModeIdx].match} ${n} ${n} `);
         var d1 = document.getElementById(gameDesc.misc.demo1);
         var d2 = document.getElementById(gameDesc.misc.demo2);
 
@@ -186,34 +237,27 @@
         var mode = gameDesc.modes[gameData.gameModeIdx];
         var num = mode.pairs[Math.floor(Math.random() * mode.pairs.length)];
 
-        console.log(` showSelectMode.. mode:${mode.match} ${n} ${n} `);
-
-        d1.src = `images/${num}a.jpg`;
-        var sn = (mode.match == 'aa') ? 'a' : 'b';
-        d2.src = `images/${num}${sn}.jpg`;
+        //console.log(` showSelectMode.. mode:${mode.match} ${n} ${n} `);
+        var sn1 = (mode.match == '-') ? '' : mode.match.charAt(0);
+        var sn2 = (mode.match == '-') ? '' : mode.match.charAt(1);
+        d1.src = `${gameDesc.images.path}/${gameDesc.images.prefix}${num}${sn1}.jpg`;
+        d2.src = `${gameDesc.images.path}/${gameDesc.images.prefix}${num}${sn2}.jpg`;
         d1.style.display='inline';
         d2.style.display='inline';
         
         var pos1 = hbgui.getPosPxOfPospc(hbgui.getPosPcOfSpecial("selectA"));
         var pos2 = hbgui.getPosPxOfPospc(hbgui.getPosPcOfSpecial("selectB"));
-        d1.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-        d1.style.transform=`translate(${pos1.x}px, ${pos1.y}px) scale(${pos1.scale},${pos1.scale}) rotateX(${pos1.rotX}deg)`; // size:enlarge .. rotate:flip
-        d2.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-        d2.style.transform=`translate(${pos2.x}px, ${pos2.y}px) scale(${pos2.scale},${pos2.scale}) rotateX(${pos2.rotX}deg)`; // size:enlarge .. rotate:flip
+        // console.log(` showSelectMode.. posA:${JSON.stringify(hbgui.getPosPcOfSpecial("selectA"))} posB:${JSON.stringify(pos1)} ${n} `);
+        hbgui.zoomOutPic(gameDesc.misc.demo1, hbgui.getPosPxOfPospc(hbgui.getPosPcOfSpecial("selectA")), false);
+        hbgui.zoomOutPic(gameDesc.misc.demo2, hbgui.getPosPxOfPospc(hbgui.getPosPcOfSpecial("selectB")), false);
+        //d1.style.transition=`transform ${hbgui.spinTimeMs}ms ease-in-out`; // linear ease 
 
         setTimeout(function() {
                 d1.style.transform=`translate(${pos1.x}px, ${pos1.y}px)`;
                 d2.style.transform=`translate(${pos2.x}px, ${pos2.y}px)`;
                 d1.style.display='none';
                 d2.style.display='none';
-            }, hbgui._longMs + gameUI.spinTimeMs)
-        /*
-        d1.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
-        zoomOutPic(gameDesc.misc.demo1, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
-        zoomOutPic(gameDesc.misc.demo2, getPosPxOfPospc(getPosPcOfSpecial("selectB")));
-        setTimeout(zoomInPic,  _longMs + gameUI.spinTimeMs, gameDesc.misc.demo1, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
-        setTimeout(zoomInPic,  _longMs + gameUI.spinTimeMs, gameDesc.misc.demo2, getPosPxOfPospc(getPosPcOfSpecial("selectA")));
-        */
+            }, hbgui._longMs + hbgui.spinTimeMs)
     }
 
     function restartGame() {
@@ -234,20 +278,24 @@
         }
         shuffle(poslist);
         
-        console.log(`start mode:${mode.name}:${mode.match} ${list} x ${poslist}`);
+        //console.log(`start mode:${mode.name}:${mode.match} ${list} x ${poslist}`);
         for (var i = 0; i < N; i++) {  // add tiles
             var img2sel = (mode.match == 'aa') ? 'a' : 'b';
-            gameData.targetList.push( { id: `p${1+2*i}`, pairId: i, src: `images/${list[i]}a.jpg`, posid: poslist[i*2] } );
-            gameData.targetList.push( { id: `p${2+2*i}`, pairId: i, src: `images/${list[i]}${img2sel}.jpg`, posid: poslist[i*2+1] } );
+            var sn1 = (mode.match == '-') ? '' : mode.match.charAt(0);
+            var sn2 = (mode.match == '-') ? '' : mode.match.charAt(1);
+            gameData.targetList.push( { id: `p${1+2*i}`, pairId: i, src: `${gameDesc.images.path}/${gameDesc.images.prefix}${list[i]}${sn1}.jpg`, posid: poslist[i*2] } );
+            gameData.targetList.push( { id: `p${2+2*i}`, pairId: i, src: `${gameDesc.images.path}/${gameDesc.images.prefix}${list[i]}${sn2}.jpg`, posid: poslist[i*2+1] } );
         }
         gameData.foundPairs = [];
         gameData.totalPairs = N;
         
+        removeAllCards();
         for (var i = 0; i < 2*N; i++) {
-            addImage(gameData.targetList[i].id, gameUI.cardBackImg);// gameData.targetList[i].src);
+            addCard(gameData.targetList[i].id, gameDesc.images.cardBackImg);// gameData.targetList[i].src);
         }
         setTimeout(hbgui.myResize, 10);  // initial placement
 
+        document.getElementById('selectModeDiv').style.display = 'none';
         hbgui.setMsg("", "bigtext");
         hbwega.extendArray(cookies.started, gameData.gameModeIdx, 0);
         cookies.started[gameData.gameModeIdx] += 1;
@@ -256,14 +304,23 @@
         gameData.state = 'wait4first'
     }
 
+    gameData.getGameStatusMsg = function() {
+        return `${gameData.attempts}. lépés`;
+    }
+
     function onClickPic(id) {
-        console.log(`click ${id} ${gameData.state}`);
+        //console.log(`click ${id} ${gameData.state}`);
         if (gameData.state == 'wait4first') {
             gameData.attempts += 1;
             gameData.selectA = id;
             gameData.state = "wait4second";
             gameData.isPairFound = false;
-            hbgui.setStatusMsg(`${gameData.attempts}. lépés`);
+            if (gameData.getGameStatusMsg) {
+                hbgui.setStatusMsg(gameData.getGameStatusMsg());
+            }
+            //LOVAS: could flip in place, but items next would cover bad
+            //const item = gameData.targetList.find(element => element.id == id);     // for url:end cheat only
+            //var pos = hbgui.getPosPcOfPosId(item.posid); //pos.scale = hbgui.zoomOutScale; //pos.rotX = hbgui.spinDeg; //pos.origin = "left top"
             hbgui.zoomOutPic(id, hbgui.getPosPxOfPospc(hbgui.getPosPcOfSpecial("selectA")));
         } else if (gameData.state == 'wait4second' && id != gameData.selectA) {
             gameData.selectB = id;
@@ -341,18 +398,23 @@
         gameData.selectB = 0;
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
+            const item = gameData.targetList.find(element => element.id == gameData.targetList[i].id);     // for url:end cheat only
+            hbgui.swapPicImage(gameData.targetList[i].id, item.src);                                       // cheat
+
             var pos = hbgui.getPosPxOfPospc(hbgui.getEndingPosPcOf(gameData.targetList[i].posid)); // i vs gameData.targetList[i].posid
-            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+            pic.style.transition=`transform ${hbgui.spinTimeMs}ms ease-in-out`; // linear ease 
             pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale})`; // size:enlarge .. rotate:flip
         }
         
+        document.getElementById('selectModeDiv').style.display = 'inline';
         document.getElementById('selectModeDiv').style.top = '30%';
         hbgui.setMsg(getClosingMsg(), "bigtext");
-        document.getElementById('restartbutton').style.display = 'inline';
+        //document.getElementById('restartbutton').style.display = 'inline';
         
         cookies.finished[gameData.gameModeIdx] += 1;
         hbwega.updateStatMin(cookies.bestMove, gameData.gameModeIdx, gameData.attempts);
-        hbwega.updateStatMin(cookies.bestTime, gameData.gameModeIdx, Math.floor((gameData.endTime - gameData.startTime)/1000));
+        var xtime = Math.max(1, Math.floor((gameData.endTime - gameData.startTime)/1000));    // to prevent strange negative numbers
+        hbwega.updateStatMin(cookies.bestTime, gameData.gameModeIdx, xtime);
         storeCookies();
     }
 
@@ -386,10 +448,15 @@
         for (var i = 0; i < gameData.targetList.length; i++) {
             var pic = document.getElementById(gameData.targetList[i].id);
             var pos = hbgui.getPosPxOfPospc(hbgui.getPosPcOfPicIdx(i));
-            pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out, opacity ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+            pic.style.transition=`transform ${hbgui.spinTimeMs}ms ease-in-out, opacity ${hbgui.spinTimeMs}ms ease-in-out`; // linear ease 
             pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale})`; // size:enlarge .. rotate:flip
             pic.style.opacity = 0.6;
         }
+
+        var pos = hbgui.getPosPxOfPospc(hbgui.getPosPcOfSpecial("selectB"));
+        var btn = document.getElementById("btnAbout");
+        btn.style.top  = `${pos.y}px`;
+        btn.style.left = `${pos.x}px`;
 
         text.innerHTML += "<br>"
         for (var i = 0; i < gameDesc.modes.length; i++) {
@@ -399,15 +466,38 @@
             }
             text.innerHTML += ".<br>"
         }
-        //disable all images
-        // add some return button
-        //windows.onClick = function() {}
+
+        d1.style.display='inline';
+        d2.style.display='inline';
+        if (gameData.targetList.length > 0) {
+            showAboutPairDemo(0);
+        }
+    }
+
+    function showAboutPairDemo(n) {
+        if (gameData.state == "about") {
+            var d1 = document.getElementById(gameDesc.misc.demo1);
+            var d2 = document.getElementById(gameDesc.misc.demo2);
+            var pos1 = hbgui.getPosPcOfSpecial("demoA");
+            var pos2 = hbgui.getPosPcOfSpecial("demoB");
+            if (n % 4 != 0) {   // flip-flop
+                pos1.rotX = 0;
+                pos2.rotX = 0;
+            }
+            //console.log(` demo ${n} . posA:${JSON.stringify(pos1)} posB:${JSON.stringify(pos2)} `);
+            hbgui.zoomOutPic(gameDesc.misc.demo1, hbgui.getPosPxOfPospc(pos1), true, gameData.targetList[n].src);
+            hbgui.zoomOutPic(gameDesc.misc.demo2, hbgui.getPosPxOfPospc(pos2), true, gameData.targetList[n+1].src);
+            setTimeout(showAboutPairDemo, 3 * hbgui.spinTimeMs, (n + 2) % gameData.targetList.length)
+        }
+        // else do nothing, About window closed before timeout
     }
 
     function closeAbout() {
         console.log(`  closeabout ${gameData.state}:${gameData.state2}`);
         gameData.state = gameData.state2;
         document.getElementById('aboutDiv').style.display = 'none';
+        document.getElementById(gameDesc.misc.demo1).style.display = 'none';
+        document.getElementById(gameDesc.misc.demo2).style.display = 'none';
         document.getElementById('tabla').style.display = 'inline';
         if (gameData.state == "menu") {
             document.getElementById('selectModeDiv').style.display = 'inline';
@@ -420,19 +510,16 @@
             for (var i = 0; i < gameData.targetList.length; i++) {
                 var pic = document.getElementById(gameData.targetList[i].id);
                 var pos = hbgui.getPosPxOfPospc(hbgui.getPosPcOfPicIdx(i));
-                pic.style.transition=`transform ${gameUI.spinTimeMs}ms ease-in-out, opacity ${gameUI.spinTimeMs}ms ease-in-out`; // linear ease 
+                pic.style.transition=`transform ${hbgui.spinTimeMs}ms ease-in-out, opacity ${hbgui.spinTimeMs}ms ease-in-out`; // linear ease 
                 pic.style.transform=`translate(${pos.x}px, ${pos.y}px) scale(${pos.scale}, ${pos.scale}) rotateX(${pos.rotX}deg)`; // size:enlarge .. rotate:flip
                 pic.style.opacity = 1;
             }
         }
-        document.getElementById('selectModeDiv').style.display = 'inline';
-
-
+        //document.getElementById('selectModeDiv').style.display = 'inline';
     }
 
     // -- some extra utility functions -----
-
-    function addImage(id, isrc, parent='toptable') {
+    function addCard(id, isrc, parentid='cardscontainer') {
         //console.log(` add ${id} of ${isrc}`);
         //<button id="b3" class="xl modebutton" onClick="selectMode(3)">3</button>
         var img = document.createElement('img'); 
@@ -445,27 +532,26 @@
         img.style.border = '2px solid white';
         img.style.zIndex = 1; // 3d
         img.onclick = function() { onClickPic(id); };
-        document.getElementById('toptable').appendChild(img);
+        document.getElementById(parentid).appendChild(img);
+    }
+
+    function removeAllCards(parent='cardscontainer') {
+        const myNode = document.getElementById(parent);
+        while (myNode.firstChild) {
+          myNode.removeChild(myNode.lastChild);
+        }
     }
 
     function addImgButton(idx, parent, text, defstyle) {
         //console.log(` add ${idx}`);
         var but = document.createElement('img'); 
         but.id = `b${idx}`;
-        but.src = gameDesc.image.doorClosed;
+        but.src = gameDesc.images.doorClosed;
         but.style.maxWidth = "25vw";
         but.style.maxHeight = "30vh";
         but.onclick = function() { selectMode(idx); };
-        /*
-        but.classList.add("modebutton");
-        but.style.border = '2px solid white';
-        var but = document.createElement('button'); 
-        but.classList.add("xl");
-        but.innerHTML = text;
-        */
         document.getElementById(parent).appendChild(but);
     }
-
 
     function shuffle(a) {
         var j, x, i;
@@ -489,6 +575,7 @@
         cookies.finished = hbcookies.read('gamesFinished');
         cookies.bestMove = hbcookies.read('bestMove');
         cookies.bestTime = hbcookies.read('bestTime');
+        cookies.music    = hbcookies.read('music');
 
         hbwega.extendArray(cookies.started, gameDesc.modes.length, 0);
         hbwega.extendArray(cookies.finished, gameDesc.modes.length, 0);

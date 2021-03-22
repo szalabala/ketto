@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Nincs2 párkereső</title>
+  <meta name="copyright" content="&copy; 2021 Balazs Szalai" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="minimal-ui,width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+  <script type="text/javascript" src="js/hbwega.js"></script>
+  <xscript type="text/javascript" src="js/hbpairgame.js"></script>
+  <script>
+      var t = "test"
+      var arr1 = [1,2,3,4,5];
+      var arr2 = [0,0,0,0,0];
+      //hbcookies.cookieRoot = "cc";
+    function f1() {
+        console.log(`f1`);
+        arr1 = hbcookies.read("arr");
+        console.log(`f1 arr:${JSON.stringify(arr1)}`)
+        arr2 = hbcookies.read("gamesFinished");
+        console.log(`f1 gf:${JSON.stringify(arr2)}`)
+        t = hbcookies.read("test");
+    }
+    function f2() {
+        console.log(`f2`);
+        arr1[1] += 1;
+        hbcookies.bake("arr", arr1);
+        arr2[1] += 1;
+        arr2[2] += 1;
+        hbcookies.bake("gamesFinished", arr2);
+        hbcookies.bake("test", "lovas");
+    }
+    function f3() {
+        console.log(`f3`);
+        hbcookies.delete("test");
+    }
+    function startOnce() {
+        console.log(`once`);
+    }
+  </script>
+</head>
+<body onload="startOnce();" onresize="hbgui.myResize();">
+    <div id="toptable" style="position:absolute;width:100%;height:100%;padding:0;">  <!-- 3D perspective:100px; -->
+        <button style="width:30vw;height:90vh" onclick="f1()">read</button>
+        <button style="width:30vw;height:90vh" onclick="f2()">write</button>
+        <button style="width:30vw;height:90vh" onclick="f3()">delete</button>
+    </div>
+    <!-- if you create your a game using this HBWEGA engine, please keep the referene visible in the about with copyright info as below:
+        Engine: &copy; Szalai Balázs <a href="https://www.buymeacoffee.com/szalabala" target="_blank"><img src="images/bmc-logo-no-background.png" alt="Buy Me A Coffee" style="max-height: 1em;vertical-align:bottom;" ></a>, GPL <a href="http://www.gnu.hu/gpl.html">hu</a>/<a href="http://www.gnu.org/licenses/gpl-3.0.en.html">en</a>
+        https://www.buymeacoffee.com/szalabala   images/bmc-logo-no-background.png
+    -->
+</body>
+</html>
